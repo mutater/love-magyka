@@ -247,8 +247,21 @@ screen = {
         draw:options({"New Game", "Continue", "Options", "Quit"})
         
         if self.key == "n" then self:down("map")
-        elseif self.key == "c" then self:down("map")
+        elseif self.key == "c" then self:down("continue")
         elseif self.key == "q" then love.event.quit() end
+    end,
+    
+    continue = function(self)
+        
+        -- Draw
+        
+        draw:initScreen("screen/continue", 38)
+        draw:header("Continue")
+        
+        
+        -- Input
+        
+        if self.key == "escape" then self:up() end
     end,
     
     map = function(self)
@@ -257,11 +270,9 @@ screen = {
         
         if self:get("map") == nil then self:set("map", newMap(world:get("currentMap"))) end
         
-        
         -- Draw Variables
         
         local map = self:get("map")
-        
         local left = draw.subLeft
 		local width = math.floor((self.width - 2 - left) / 2)
 		local top = 2
@@ -269,14 +280,14 @@ screen = {
         
         local x = world:get("playerX")
         local y = world:get("playerY")
-        
+
         
         -- Drawing info and map
         
         draw:initScreen((screen.height - 1) * 2)
         
         map:draw(x, y, width, height, left, top)
-        draw:rect("black", left + width + 1, top + math.floor(height / 2) + 1, 2, 1)
+        draw:rect("white", left + width + 1, top + math.floor(height / 2) + 1, 2, 1)
         
         draw:top()
         draw:header("Map - "..world:get("currentMap"))
@@ -342,6 +353,9 @@ screen = {
             local y = world:get("playerY")
             local group = map:get("group", x, y)
             
+            
+            -- Check portals
+            
             if map.data.portalTiles[y] then
                 if map.data.portalTiles[y][x] then
                     local portal = map.data.portalTiles[y][x]
@@ -350,9 +364,17 @@ screen = {
                         world:set("playerY", portal.y + 2)
                         self:set("portal", portal)
                         self:down("town")
+                    elseif portal.teleport then
+                        world:set("currentMap", portal.name)
+                        world:set("playerX", portal.targetX)
+                        world:set("playerY", portal.targetY)
+                        self:set("map", newMap(portal.name))
                     end
                 end
             end
+            
+            
+            -- Determine encounters
             
             if group > 0 then
                 local move = math.abs(moveX) + math.abs(moveY)

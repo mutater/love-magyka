@@ -305,6 +305,10 @@ function newMap(arg) -- Unedited
         local groupsImage = love.image.newImageData("map/%s Groups.png" % {arg})
         map.data = require("map/"..arg)
         
+        map.tiles = {}
+        map.collision = {}
+        map.groups = {}
+        
         for y = 0, tileImage:getHeight() - 1 do
             local tileRow = {}
             local collisionRow = {}
@@ -327,15 +331,22 @@ function newMap(arg) -- Unedited
         end
         
         map.data.portalTiles = {}
-        for k, v in ipairs(map.data.portals) do
-            if v.town then
-                portal = v
-                map.data.portalTiles[v.y] = {}
-                map.data.portalTiles[v.y+1] = {}
-                map.data.portalTiles[v.y][v.x] = portal
-                map.data.portalTiles[v.y][v.x+1] = portal
-                map.data.portalTiles[v.y+1][v.x] = portal
-                map.data.portalTiles[v.y+1][v.x+1] = portal
+        if map.data.portals then
+            for k, v in ipairs(map.data.portals) do
+                local pt = map.data.portalTiles
+                if v.town then
+                    local portal = v
+                    if pt[v.y] == nil then pt[v.y] = {} end
+                    if pt[v.y+1] == nil then pt[v.y+1] = {} end
+                    pt[v.y][v.x] = portal
+                    pt[v.y][v.x+1] = portal
+                    pt[v.y+1][v.x] = portal
+                    pt[v.y+1][v.x+1] = portal
+                elseif v.teleport then
+                    local portal = v
+                    if pt[v.y] == nil then pt[v.y] = {} end
+                    pt[v.y][v.x] = portal
+                end
             end
         end
         

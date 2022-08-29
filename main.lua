@@ -16,19 +16,24 @@ require "script/tools"
  
  - MINIMUM VIABLE BUILD -
  
- * Add submap teleportation and map entities.
  * Saving / Loading (Loading is basically in place).
- * Give dev toggles and add more dev commands for easier playtesting.
+ * Button to open the save directory.
+ * New Game with character classes and world/player naming.
+ * Carry stat.
  * Crafting of specific types in blacksmith etc.
+ * Curing and blessing from the church.
+ * Quests.
+ * Enchanting.
+ * Give dev toggles and add more dev commands for easier playtesting.
  * Clear up inconsistent input hints.
  * Add headers or some sort of description for every page.
  * Add art for every page.
- * Curing and blessing from the church.
- * Quests.
  * Generic end boss for the demo.
  
  - EXTRA -
  
+ * Options.
+ * Dynamically scaling screen.
  * Elemental attacks and resistances.
  * Ability to choose an item from the inventory to use in:
    - Item and Art application.
@@ -60,10 +65,10 @@ keyLShift = false
 keyRShift = false
 keyShift = false
 input = {
-    up = {"up", false},
-    down = {"down", false},
-    left = {"left", false},
-    right = {"right", false},
+    up = {"up", false, 0},
+    down = {"down", false, 0},
+    left = {"left", false, 0},
+    right = {"right", false, 0},
 }
 
 backspace = false
@@ -116,6 +121,22 @@ function love.keypressed(key)
     if key == "rshift" then keyRShift = true end
     
     
+    -- Give movement keys a delay if none of the others are pressed
+    
+    if input[key] then
+        input[key][2] = true
+        
+        local delay = true
+        for k, v in ipairs(input) do
+            if v[2] then
+                delay = false
+                break
+            end
+        end
+        if delay then input[key][3] = -0.1 end
+    end
+    
+    
     -- Send key to game loop
     
     if not console then screen.key = key end
@@ -162,7 +183,9 @@ function love.update(dt)
     if keyTimer >= keyTimerDefault then
         keyTimer = keyTimer - keyTimerDefault
         for k, v in pairs(input) do
-            if love.keyboard.isScancodeDown(v[1]) then v[2] = true
+            v[3] = v[3] + dt
+            if love.keyboard.isScancodeDown(v[1]) then
+                if v[3] > 0 then v[2] = true end
             else v[2] = false end
         end
     end

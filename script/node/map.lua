@@ -17,16 +17,16 @@ Map = Node{
             local x = arg[1]
             local y = arg[2]
             
-            if x >= #self.tiles[1] or x < 0 then return self.background end
-            if y >= #self.tiles or y < 0 then return self.background end
+            if x >= #self.tiles[1] or x < 1 then return self.background end
+            if y >= #self.tiles or y < 1 then return self.background end
             
             return self.tiles[y][x]
         elseif key == "collision" then
             local x = arg[1]
             local y = arg[2]
             
-            if x >= #self.collision[1] or x < 0 then return false end
-            if y >= #self.collision or y < 0 then return false end
+            if x >= #self.collision[1] or x < 1 then return false end
+            if y >= #self.collision or y < 1 then return false end
             
             return self.collision[y][x]
         elseif key == "group" then
