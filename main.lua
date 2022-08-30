@@ -9,6 +9,7 @@ require "script/globals"
 require "script/screen"
 require "script/tools"
 
+require "library/TSerial"
 
 -- TODO
 
@@ -16,14 +17,12 @@ require "script/tools"
  
  - MINIMUM VIABLE BUILD -
  
- * Saving / Loading (Loading is basically in place).
- * Button to open the save directory.
  * New Game with character classes and world/player naming.
  * Carry stat.
  * Crafting of specific types in blacksmith etc.
  * Curing and blessing from the church.
- * Quests.
- * Enchanting.
+ * Saving / Loading (Loading is basically in place). Fix stat loading when entity is player.
+ * Button to open the save directory.
  * Give dev toggles and add more dev commands for easier playtesting.
  * Clear up inconsistent input hints.
  * Add headers or some sort of description for every page.
@@ -32,6 +31,8 @@ require "script/tools"
  
  - EXTRA -
  
+ * Quests.
+ * Enchanting.
  * Options.
  * Dynamically scaling screen.
  * Elemental attacks and resistances.
@@ -64,12 +65,11 @@ player = world:get("player")
 keyLShift = false
 keyRShift = false
 keyShift = false
-input = {
-    up = {"up", false, 0},
-    down = {"down", false, 0},
-    left = {"left", false, 0},
-    right = {"right", false, 0},
-}
+input = {}
+
+for k, v in ipairs({"up", "down", "left", "right"}) do
+    input[v] = {key="up", pressed=false, justPressed=false, delay=0}
+end
 
 backspace = false
 
@@ -81,6 +81,9 @@ local command = ""
 
 local keyTimer = 0
 local keyTimerDefault = 0.1
+
+local frameTimer = 0
+local frameTimerDefault = 0.03
 
 
 -- Initialization
@@ -95,6 +98,7 @@ function love.load()
         "123456789.,!?-+/():;%&`'*#=[]\"|_")
     love.graphics.setFont(font)
     love.graphics.setBackgroundColor(color.gray18)
+    love.filesystem.setIdentity("magyka/saves")
     math.randomseed(os.time())
     
     
@@ -107,6 +111,8 @@ end
 function love.keyreleased(key)
     if key == "lshift" then keyLShift = false end
     if key == "rshift" then keyRShift = false end
+    
+    if input[key] then input[key].pressed = false end
 end
 
 function love.keypressed(key)
@@ -124,16 +130,22 @@ function love.keypressed(key)
     -- Give movement keys a delay if none of the others are pressed
     
     if input[key] then
-        input[key][2] = true
+        input[key].pressed = true
         
         local delay = true
-        for k, v in ipairs(input) do
-            if v[2] then
+        for k, v in pairs(input) do
+            if v.pressed and k ~= key then
                 delay = false
                 break
             end
         end
-        if delay then input[key][3] = -0.1 end
+        
+        if delay then
+            input[key].delay = -0.1
+            input[key].justPressed = true
+        else
+            input[key].delay = 0
+        end
     end
     
     
@@ -183,10 +195,8 @@ function love.update(dt)
     if keyTimer >= keyTimerDefault then
         keyTimer = keyTimer - keyTimerDefault
         for k, v in pairs(input) do
-            v[3] = v[3] + dt
-            if love.keyboard.isScancodeDown(v[1]) then
-                if v[3] > 0 then v[2] = true end
-            else v[2] = false end
+            v.delay = v.delay + dt
+            if v.delay > 0 and v.pressed then v.justPressed = true end
         end
     end
     
@@ -194,6 +204,13 @@ function love.update(dt)
     -- Shift
     
     keyShift = keyLShift or keyRShift
+    
+    
+    -- Performance Enhancement
+    
+    love.timer.sleep(1/30 - dt)
+    
+    collectgarbage("collect")
 end
 
 
@@ -213,10 +230,4 @@ function love.draw()
         draw:text(command, 2, 21)
         draw:text("_", 2 + #command, 21)
     end
-    
-    
-    -- Performance Enhancement
-    
-    collectgarbage("collect")
-    love.timer.sleep(1/30)
 end

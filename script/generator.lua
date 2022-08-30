@@ -112,14 +112,16 @@ end
 
 function newEntity(arg)
     if type(arg) == "string" then
-        local entity = newEntity(setupString(arg, "Entity"))
+        local entity = setupString(arg, "Entity")
+        entity.enemy = true
+        entity = newEntity(entity)
         
         if entity then return entity
         else return Entity{name=arg} end
     elseif type(arg) == "table" then
         local entity = setupTable(arg)
         
-        --[[if entity.inventory then
+        if entity.inventory then
             for k, v in ipairs(entity.inventory) do
                 v[1] = newItem(v[1])
             end
@@ -146,13 +148,17 @@ function newEntity(arg)
             for k, v in ipairs(entity.arts) do
                 entity.art[k] = newEffect(v)
             end
-        end]]--
+        end
         
         
         -- Parse attack effect
         
         if entity.attackEffect then
-            entity.attackEffect = newEffect(json.decode(entity.attackEffect))
+            if type(entity.attackEffect) == "string" then
+                entity.attackEffect = newEffect(json.decode(entity.attackEffect))
+            else
+                entity.attackEffect = newEffect(entity.attackEffect)
+            end
         else
             entity.attackEffect = newEffect({hp={-1, -1}})
         end
@@ -169,9 +175,11 @@ function newEntity(arg)
             critDamage = 100,
         }
         
-        if entity.stats then -- Load stats for entities that are enemies
-            entity.stats = json.decode(entity.stats)
-            entity.baseStats = entity.stats
+        if entity.enemy then
+            if entity.stats then
+                entity.stats = json.decode(entity.stats)
+                entity.baseStats = entity.stats
+            end
         end
         
         if entity.baseStats then
@@ -216,14 +224,7 @@ function newEntity(arg)
         
         -- Parse drops for enemies
         
-        if entity.drops then
-            entity.drops = json.decode(entity.drops)
-            
-            entity.inventory = {}
-            for k, v in pairs(entity.drops) do
-                table.insert(entity.inventory, newLoot(v))
-            end
-        end
+        if entity.drops then entity.drops = newLoot(json.decode(entity.drops)) end
         
         entity = Entity(entity)
         entity:update()
@@ -290,9 +291,7 @@ function newLoot(arg) -- Unedited
         return newLoot(loot)
     elseif type(arg) == "table" then
         local loot = deepcopy(arg)
-        
-        loot = Loot(loot)
-        return loot
+        return Loot(loot)
     end
 end
 

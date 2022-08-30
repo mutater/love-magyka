@@ -9,10 +9,10 @@ return {
         {
             name = "Dungeon",
             teleport = true,
-            x = 111,
-            y = 111,
-            targetX = 23,
-            targetY = 26,
+            x = 114,
+            y = 112,
+            targetX = 17,
+            targetY = 28,
         },
     },
     encounters = {

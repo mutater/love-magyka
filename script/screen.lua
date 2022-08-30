@@ -2,6 +2,8 @@ require "script/globals"
 require "script/tools"
 require "script/generator"
 
+require "library/TSerial"
+
 screen = {
     
     -- Variables
@@ -14,17 +16,9 @@ screen = {
     branch = {},
     branchData = {},
     branchDataDefaults = {
-        map = {
-            map = nil,
-            portal = nil,
-            hunting = false,
-            steps = 0,
-        },
-        town = {
-            town = nil,
-            store = "",
-            storeType = "",
-        },
+        continue = {saves=nil},
+        map = {map=nil, portal=nil, hunting=false, steps=0},
+        town = {town=nil, store="", storeType=""},
         battle = {
             turn = 1,
             turnOrder = {},
@@ -38,59 +32,19 @@ screen = {
             targetType = "",
 			target = "",
         },
-		inventoryBattle = {
-            item = nil,
-		},
-        artsBattle = {
-            art = nil
-        },
-        victory = {
-            stage = "input",
-            lootEntity = newEntity{},
-        },
-        defeat = {
-            stage = "curse",
-        },
-        inspectItem = {
-            stage = "input",
-            quantity = 1,
-            item = nil,
-            text = {},
-        },
-        inspectItemBattle = {
-            item = nil,
-        },
-        inspectItemSell = {
-            stage = "input",
-            quantity = 1,
-            item = nil,
-        },
-        inspectItemStore = {
-            stage = "input",
-            quantity = 0,
-            item = nil,
-        },
-        inspectItemEquipped = {
-            stage = "input",
-            item = nil,
-            text = "",
-        },
-        inspectArt = {
-            stage = "input",
-            art = nil,
-            text = {},
-        },
-        inspectArtBattle = {
-            art = nil,
-        },
-        crafting = {
-            station = "none",
-        },
-        craftItem = {
-            stage = "input",
-            recipe = nil,
-            quantity = 0,
-        },
+		inventoryBattle = {item=nil},
+        artsBattle = {art=nil},
+        victory = {stage="input", lootEntity=newEntity{}},
+        defeat = {stage="curse"},
+        inspectItem = {stage="input", quantity=1, item=nil, text={}},
+        inspectItemBattle = {item=nil},
+        inspectItemSell = {stage="input", quantity=1, item=nil},
+        inspectItemStore = {stage="input", quantity=0, item=nil},
+        inspectItemEquipped = {stage="input", item=nil, text=""},
+        inspectArt = {stage="input", art=nil, text={}},
+        inspectArtBattle = {art=nil},
+        crafting = {station="none"},
+        craftItem = {stage="input", recipe=nil, quantity=0},
     },
     key = "",
     
@@ -167,8 +121,9 @@ screen = {
 		
 		local option = nil
         
+        draw:newline()
 		if #list == 0 then
-			draw:text("{gray68}- Empty")
+			draw:text("{gray68} Empty")
 		else
 			for i = start, stop do
                 local inputTextPadding = #tostring(stop) - #tostring(i)
@@ -253,15 +208,42 @@ screen = {
     
     continue = function(self)
         
+        -- Grab saves
+        
+        if self:get("saves") == nil then
+            local saves = love.filesystem.getDirectoryItems("")
+            self:set("saves", {})
+            
+            for k, v in ipairs(saves) do
+                if love.filesystem.getRealDirectory(v) == love.filesystem.getSaveDirectory() then
+                    table.insert(self:get("saves"), TSerial.unpack(love.filesystem.read(v)))
+                end
+            end
+        end
+        
+        
         -- Draw
         
-        draw:initScreen("screen/continue", 38)
+        draw:initScreen(38, "screen/continue")
         draw:header("Continue")
         
         
-        -- Input
+        -- Listing saves
         
-        if self.key == "escape" then self:up() end
+        draw:newline()
+        self:pages(
+            self:get("saves"),
+            function(save)
+                return save.name
+            end,
+            function(save)
+                world:set("player", newEntity(save))
+                print(dumpTable(world:get("player"):export()))
+                player = world:get("player")
+                self:down("camp")
+            end,
+            function() if self.key == "escape" then self:up() end end
+        )
     end,
     
     map = function(self)
@@ -309,28 +291,20 @@ screen = {
         
         -- Input Variables
         
-        local left = input.left[2]
-        local right = input.right[2]
-        local up = input.up[2]
-        local down = input.down[2]
-        
         local moveX = 0
         local moveY = 0
         
-        
-        -- Input Processing
-        
         if self.key == "c" then self:down("camp") end
         if self.key == "h" then self:set("hunting", not self:get("hunting")) end
-        if left  then moveX = moveX - 1 end
-        if right then moveX = moveX + 1 end
-        if up    then moveY = moveY - 1 end
-        if down  then moveY = moveY + 1 end
+        if input.left.justPressed  then moveX = moveX - 1 end
+        if input.right.justPressed then moveX = moveX + 1 end
+        if input.up.justPressed    then moveY = moveY - 1 end
+        if input.down.justPressed  then moveY = moveY + 1 end
         
-        input.left[2] = false
-        input.right[2] = false
-        input.up[2] = false
-        input.down[2] = false
+        input.left.justPressed = false
+        input.right.justPressed = false
+        input.up.justPressed = false
+        input.down.justPressed = false
         
         
         -- Collision Detection
@@ -575,11 +549,11 @@ screen = {
         
         -- Draw Equipment
         
-        playerEquipment = player:get("equipment")
+        draw:newline()
+        local playerEquipment = player:get("equipment")
         local i = 0
         for k, v in pairs(equipment) do
             i = i + 1
-            
             if playerEquipment[v] ~= "" then draw:text("(%d) %s: %s" % {i, v, playerEquipment[v]:display(0)})
             else draw:text("(%d) %s: {gray48}None" % {i, v}) end
         end
@@ -590,7 +564,7 @@ screen = {
         
         -- Input
         
-        if isInRange(self.key, 1, 8) then
+        if isInRange(self.key, 1, 7) then
             local item = playerEquipment[equipment[tonumber(self.key)]]
             
             if item ~= "" then
@@ -889,13 +863,10 @@ screen = {
         
         if self:get("stage") == "input" then
             for k, v in ipairs(self:get("enemy", "battle")) do
-                for _, loot in ipairs(v:get("inventory")) do
-                    lootEntity.gp = lootEntity.gp + rand(loot.gp)
-                    lootEntity.xp = lootEntity.xp + rand(loot.xp)
-                    
-                    for __, item in ipairs(loot:drop()) do
-                        lootEntity:addItem(item[1], item[2])
-                    end
+                lootEntity.gp = lootEntity.gp + rand(v.drops.gp)
+                lootEntity.xp = lootEntity.xp + rand(v.drops.xp)
+                for _, item in ipairs(v:get("drops"):drop()) do
+                    lootEntity:addItem(item[1], item[2])
                 end
             end
             

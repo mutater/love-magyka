@@ -60,6 +60,6 @@ elements = {
 -- Add elemental resistance and damage to extraStats
 
 for k, v in ipairs(elements) do
-    table.insert(extraStats, k.."Damage")
-    table.insert(extraStats, k.."Resistance")
+    table.insert(extraStats, v.."Damage")
+    table.insert(extraStats, v.."Resistance")
 end
