@@ -19,8 +19,6 @@ require "library/TSerial"
  
  * New Game with character classes and world/player naming.
  * Carry stat.
- * Crafting of specific types in blacksmith etc.
- * Curing and blessing from the church.
  * Saving / Loading (Loading is basically in place). Fix stat loading when entity is player.
  * Button to open the save directory.
  * Give dev toggles and add more dev commands for easier playtesting.
@@ -31,6 +29,7 @@ require "library/TSerial"
  
  - EXTRA -
  
+ * Curing and blessing from the church.
  * Quests.
  * Enchanting.
  * Options.

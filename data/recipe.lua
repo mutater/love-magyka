@@ -5,6 +5,6 @@ return {
             ["Throwing Knife"] = 1,
         },
         quantity = 1,
-        station = "none",
+        station = "forge",
     }
 }

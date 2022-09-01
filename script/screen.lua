@@ -16,6 +16,7 @@ screen = {
     branch = {},
     branchData = {},
     branchDataDefaults = {
+        newGame = {stage="input"},
         continue = {saves=nil},
         map = {map=nil, portal=nil, hunting=false, steps=0},
         town = {town=nil, store="", storeType=""},
@@ -47,7 +48,6 @@ screen = {
         craftItem = {stage="input", recipe=nil, quantity=0},
     },
     key = "",
-    
     
     -- Functionality Functions
     
@@ -84,6 +84,11 @@ screen = {
     end,
     
     down = function(self, name, args) -- Goes down a screen
+        if name == "map" then
+            self.branch = {}
+            self.branchData = {}
+        end
+        
         args = args or {}
         self.branchData[name] = deepcopy(self.branchDataDefaults[name])
         updateTable(self.branchData[name], args)
@@ -104,7 +109,10 @@ screen = {
     end,
     
     add = function(self, key, value) -- Adds to a value from the current screen's branchData
-        self.branchData[self.current][key] = self.branchData[self.current][key] + value
+        local data = self.branchData[self.current]
+        
+        if type(data[key]) == "string" then data[key] = data[key]..value
+        else data[key] = data[key] + value end
     end,
     
     
@@ -167,6 +175,35 @@ screen = {
         elseif self.key == "escape" then cancelFunction() end
     end,
     
+    input = function(self, lengthRange, confirmFunction, cancelFunction) -- Allow typing input from player
+        if self:get("input") == nil then self:set("input", "") end
+        love.keyboard.setKeyRepeat(true)
+        
+        draw:newline()
+        draw:text(" : "..self:get("input").."_")
+        
+        draw:newline()
+        draw:text("- Please type an answer.")
+        
+        local length = #self:get("input")
+        
+        if ("abcdefghijklmnopqrstuvwxyz1234567890,"):find(self.key) then
+            if keyShift then self:add("input", self.key:upper())
+            else self:add("input", self.key) end
+        elseif self.key == "space" then
+            self:add("input", " ")
+        elseif self.key == "backspace" then 
+            if length > 1 then self:set("input", self:get("input"):sub(1, length - 1))
+            elseif length == 1 then self:set("input", "") end
+        elseif self.key == "return" and length > lengthRange[1] and length < lengthRange[2] then
+            love.keyboard.setKeyRepeat(false)
+            confirmFunction()
+        elseif self.key == "escape" then
+            love.keyboard.setKeyRepeat(false)
+            cancelFunction()
+        end
+    end,
+    
     cancel = function(self) -- Returns true if escape or return are pressed
         if self.key == "return"  or self.key == "escape" then return true end
         return false
@@ -201,9 +238,29 @@ screen = {
         draw:newline()
         draw:options({"New Game", "Continue", "Options", "Quit"})
         
-        if self.key == "n" then self:down("map")
+        if self.key == "n" then self:down("newGame")
         elseif self.key == "c" then self:down("continue")
         elseif self.key == "q" then love.event.quit() end
+    end,
+    
+    newGame = function(self)
+        
+        -- Draw
+        
+        draw:initScreen(38, "screen/newGame")
+        draw:header("New Game")
+        
+        
+        -- Get player name
+        
+        self:input(
+            {2, 15},
+            function()
+                player:set("name", self:get("input"))
+                self:down("map")
+            end,
+            function() self:up() end
+        )
     end,
     
     continue = function(self)
@@ -407,9 +464,15 @@ screen = {
         
         draw:initScreen(38, "screen/"..self:get("storeType", "town"))
         
-        if store.sell then
+        local options = {}
+        
+        if store.sell then table.insert(options, "Sell")
+        elseif store.forge then table.insert(options, "Forge")
+        elseif store.enchant then table.insert(options, "Enchant") end
+        
+        if #options > 0 then
             draw:newline()
-            draw:options({"Sell"})
+            draw:options(options)
         end
         
         
@@ -428,7 +491,11 @@ screen = {
         
         -- Input
         
-        if self.key == "s" and store.sell then self:down("inventorySell") end
+        if self.key == "s" and store.sell then self:down("inventorySell")
+        elseif self.key == "f" and store.forge then
+            self:down("crafting")
+            self:set("station", "forge")
+        end
     end,
     
     camp = function(self)
@@ -453,7 +520,9 @@ screen = {
         if self.key == "i" then self:down("inventory")
         elseif self.key == "e" then self:down("equipment")
         elseif self.key == "a" then self:down("arts")
-        elseif self.key == "c" then self:down("crafting")
+        elseif self.key == "c" then
+            self:down("crafting")
+            self:set("station", "none")
         elseif self.key == "escape" then self:up() end
     end,
     
@@ -1279,13 +1348,20 @@ screen = {
         -- Draw
         
         draw:initScreen(38, "screen/craftItem")
-        draw:header("Craft")
+        local division = " - "..self:get("station")
+        if self:get("station") == "none" then division = "" end
+        draw:header("Craft"..division)
         
         
         -- List crafting recipes
         
+        local _recipes = {}
+        for k, v in ipairs(player:get("recipes")) do
+            if v:get("station") == self:get("station") then table.insert(_recipes, v) end
+        end
+        
         self:pages(
-            player:get("recipes"),
+            _recipes,
             function(recipe)
                 local item = recipe:get("item")
                 if item:get("stackable") then return item:display(recipe:get("quantity"))
