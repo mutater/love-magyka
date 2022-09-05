@@ -16,7 +16,7 @@ screen = {
     branch = {},
     branchData = {},
     branchDataDefaults = {
-        newGame = {stage="input"},
+        newGame = {name="", stage="name", class=nil},
         continue = {saves=nil},
         map = {map=nil, portal=nil, hunting=false, steps=0},
         town = {town=nil, store="", storeType=""},
@@ -118,7 +118,7 @@ screen = {
     
     -- Abstraction Functions
     
-    pages = function(self, list, printFunction, confirmFunction, cancelFunction) -- Shows a list in page format with numerical options
+    pages = function(self, list, printFunction, confirmFunction, cancelFunction, extraOptions) -- Shows a list in page format with numerical options
         if self:get("page") == nil then self:set("page", 1) end
         
 		local start = (self:get("page") - 1) * 10 + 1
@@ -141,10 +141,16 @@ screen = {
 				local text = "%s(%d) " % {inputTextPrefix, inputText}
 				text = text..printFunction(list[i])
 				
-				draw:text(text, 4 + inputTextPadding)
+                draw:rect(color.gray28, 5 + inputTextPadding, draw.row, #tostring(i) + 2, 1)
+				draw:text(text, 5 + inputTextPadding)
 			end
 		end
 		
+        if extraOptions then
+            draw:newline()
+            draw:options(extraOptions)
+        end
+        
         draw:newline()
         draw:text("- Press a number or letter to select an option.")
         draw:text("  Press [LEFT] and [RIGHT] to navigate pages. Press [ESC] to go back.")
@@ -187,15 +193,19 @@ screen = {
         
         local length = #self:get("input")
         
-        if ("abcdefghijklmnopqrstuvwxyz1234567890,"):find(self.key) then
-            if keyShift then self:add("input", self.key:upper())
-            else self:add("input", self.key) end
-        elseif self.key == "space" then
-            self:add("input", " ")
-        elseif self.key == "backspace" then 
+        if length <= lengthRange[2] then
+            if ("abcdefghijklmnopqrstuvwxyz1234567890,"):find(self.key) then
+                if keyShift then self:add("input", self.key:upper())
+                else self:add("input", self.key) end
+            elseif self.key == "space" then
+                self:add("input", " ")
+            end
+        end
+        
+        if self.key == "backspace" then 
             if length > 1 then self:set("input", self:get("input"):sub(1, length - 1))
             elseif length == 1 then self:set("input", "") end
-        elseif self.key == "return" and length > lengthRange[1] and length < lengthRange[2] then
+        elseif self.key == "return" and length >= lengthRange[1] and length <= lengthRange[2] then
             love.keyboard.setKeyRepeat(false)
             confirmFunction()
         elseif self.key == "escape" then
@@ -248,19 +258,66 @@ screen = {
         -- Draw
         
         draw:initScreen(38, "screen/newGame")
-        draw:header("New Game")
         
         
         -- Get player name
         
-        self:input(
-            {2, 15},
-            function()
-                player:set("name", self:get("input"))
+        if self:get("stage") == "name" then
+            draw:header("New Game - Name")
+            
+            self:input(
+                {2, 15},
+                function()
+                    self:set("name", self:get("input"))
+                    self:set("stage", "class input")
+                end,
+                function() self:up() end
+            )
+        
+        
+        -- Get class choice
+        
+        elseif self:get("stage") == "class input" then
+            draw:header("New Game - Class")
+            
+            draw:newline()
+            draw:text("Choose your class.")
+            
+            draw:newline()
+            draw:options({"Knight", "Warrior", "Rogue", "Spellsword", "Magye"})
+            
+            if self.key == "k" then self:set("class", newClass("Knight"))
+            elseif self.key == "w" then self:set("class", newClass("Warrior"))
+            elseif self.key == "r" then self:set("class", newClass("Rogue"))
+            elseif self.key == "s" then self:set("class", newClass("Spellsword"))
+            elseif self.key == "m" then self:set("class", newClass("Magye"))
+            elseif self.key == "escape" then self:set("stage", "name") end
+            
+            if inString("kwrsm", self.key) then self:set("stage", "class output") end
+        
+        
+        -- Display and confirm class choice
+        
+        elseif self:get("stage") == "class output" then
+            draw:header("New Game - Class - "..self:get("class").name)
+            
+            draw:newline()
+            for k, v in ipairs(self:get("class").description) do
+                draw:text(v)
+            end
+            
+            draw:newline()
+            draw:text("Are you sure you wish to pick %s?" % self:get("class").name)
+            
+            draw:newline()
+            draw:options({"Yes", "No"})
+            
+            if self.key == "y" then
+                player:setClass(self:get("class"))
+                player:set("name", self:get("name"))
                 self:down("map")
-            end,
-            function() self:up() end
-        )
+            elseif self.key == "n" or self.key == "escape" then self:set("stage", "class input") end
+        end
     end,
     
     continue = function(self)
@@ -287,20 +344,24 @@ screen = {
         
         -- Listing saves
         
-        draw:newline()
         self:pages(
             self:get("saves"),
             function(save)
-                return save.name
+                return save.player.name
             end,
             function(save)
-                world:set("player", newEntity(save))
-                print(dumpTable(world:get("player"):export()))
+                world = newWorld(save)
                 player = world:get("player")
-                self:down("camp")
+                self:down("map")
             end,
-            function() if self.key == "escape" then self:up() end end
+            function() if self.key == "escape" then self:up() end end,
+            {"Open Save Directory"}
         )
+        
+        
+        -- Input
+        
+        if self.key == "o" then love.system.openURL(love.filesystem.getSaveDirectory()) end
     end,
     
     map = function(self)
@@ -308,6 +369,8 @@ screen = {
         -- Loads map if unloaded
         
         if self:get("map") == nil then self:set("map", newMap(world:get("currentMap"))) end
+        
+        if not saving then saving = true end
         
         -- Draw Variables
         
@@ -523,6 +586,7 @@ screen = {
         elseif self.key == "c" then
             self:down("crafting")
             self:set("station", "none")
+        elseif self.key == "o" then self:down("options")
         elseif self.key == "escape" then self:up() end
     end,
     
@@ -568,7 +632,7 @@ screen = {
             end,
             function(item)
                 self:down("inspectItemSell")
-                self:set("item", item, "inspectItemSel")
+                self:set("item", item[1], "inspectItemSell")
             end,
             function() self:up() end
         )
@@ -1147,7 +1211,7 @@ screen = {
                     self:set("stage", "sell")
                 else
                     player:removeItem(item)
-                    self:set("quantity", 0)
+                    self:set("quantity", 1)
                     self:set("stage", "sell output")
                 end
             elseif self.key == "escape" then self:up() end
@@ -1163,11 +1227,11 @@ screen = {
         
         elseif self:get("stage") == "sell output" then
             local sellText = ""
-            if quantity == 1 and not item:get("stackable") then sellText = item:display()
+            if self:get("quantity") == 1 and not item:get("stackable") then sellText = item:display()
             else sellText = item:display(self:get("quantity")) end
             
-            local sellValue = math.ceil(item:get("value") * quantity * 0.67)
-            sellText = sellText.." for <gp>{gp}%d{white}." % {sellValue}
+            local sellValue = math.ceil(item:get("value") * self:get("quantity") * 0.67)
+            sellText = sellText.." for <gp>{gp} {white}%d" % {sellValue}
             
             draw:newline()
             draw:text("Sold %s." % {sellText})
@@ -1176,7 +1240,7 @@ screen = {
             
             if self:cancel() then
                 player:removeItem(item, self:get("quantity"))
-                player:add("gp", sellValue)
+                player:add("gp", sellValue * self:get("quantity"))
                 
                 if player:numOfItem(item) == 0 or not item:get("stackable") then self:up()
                 else self:set("stage", "input") end
@@ -1438,4 +1502,44 @@ screen = {
             end
         end
     end,
+
+    options = function(self)
+        draw:initScreen(38, "screen/options")
+        draw:header("Options")
+        
+        draw:newline()
+        draw:options({"Audio", "Video", "Binds", "Misc"})
+        
+        if self:cancel() then self:up() end
+    end,
+    
+    quit = function(self)
+        
+        -- Draw
+        
+        draw:initScreen(38, "screen/quit")
+        draw:header("Quit")
+        
+        draw:newline()
+        draw:text("Save before you quit?")
+        
+        draw:newline()
+        draw:options({"Yes", "No"})
+        
+        draw:newline()
+        draw:text(" - Press a letter to select an option or press [ESC] to go back.")
+        
+        
+        -- Input
+        
+        if self.key == "y" then
+            love.filesystem.write(player:get("name"), TSerial.pack(world:export(), false, true))
+            os.exit()
+        elseif self.key == "n" then
+            os.exit()
+        elseif self.key == "escape" then
+            self:up()
+            return true
+        end
+    end
 }

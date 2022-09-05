@@ -20,6 +20,7 @@ stats = {
     "maxMp",
     "strength",
     "intelligence",
+    "dexterity",
     "vitality",
     "armor",
     "resistance",
@@ -27,6 +28,7 @@ stats = {
     "dodge",
     "crit",
     "critDamage",
+    "carry",
     "luck",
 }
 

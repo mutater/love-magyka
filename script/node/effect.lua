@@ -215,7 +215,6 @@ Effect = Node{
         
         -- Output
         local line = "%s%s%s%s" % {actionLine, statusLine, effectLine, passiveLine}
-        print(line)
         return line
     end,
 }

@@ -36,6 +36,10 @@ function dumpTable(o) -- Dumps a table to a string
    end
 end
 
+function dumpClass(c) -- Dumps a class to a string
+    return dumpTable(c:export())
+end
+
 function updateTable(t1, t2) -- Updates t1 with t2's values
     for k, v in pairs(t2) do t1[k] = v end
 end
@@ -113,6 +117,14 @@ function split(str, sep, num) -- Splits a string by a string and returns a table
     end
     
     return t
+end
+
+function inString(str, character)
+    local t = {}
+    str:gsub(".", function(c) t[c] = true end)
+    
+    if t[character] then return true end
+    return false
 end
 
 function repr(str) -- Returns a string with escape codes backslashed

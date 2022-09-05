@@ -27,10 +27,10 @@ Entity = Node{
     passives = {},
     
     levelUp = function(self)
+        self.stats.maxHp = math.ceil(self.stats.maxHp * (1.09 - self.level / 2000))
+        self.stats.maxMp = math.ceil(self.stats.maxMp * (1.09 - self.level / 2000))
+        self:set("maxXp", math.ceil(self.maxXp * (1.11 - self.level / 2000))
         self:add("level", 1)
-        self:get("stats").maxHp = math.ceil(self:get("stats").maxHp * 1.1)
-        self:get("stats").maxMp = math.ceil(self:get("stats").maxMp * 1.1)
-        self:set("maxXp", math.ceil(self:get("maxXp") * 1.1))
     end,
     
     display = function(self)
@@ -267,6 +267,23 @@ Entity = Node{
         end
         
         return text
+    end,
+    
+    setClass = function(self, class)
+        self.baseStats.maxHp = class.hp
+        self.baseStats.maxMp = class.mp
+        
+        self:update()
+        
+        self.hp = class.hp
+        self.mp = class.mp
+        self.class = class
+        
+        for k, v in pairs(class.stats) do
+            self.baseStats[k] = v
+        end
+        
+        self:update()
     end,
     
     

@@ -15,20 +15,7 @@ require "library/TSerial"
 
 --[[
  
- - MINIMUM VIABLE BUILD -
- 
- * New Game with character classes and world/player naming.
  * Carry stat.
- * Saving / Loading (Loading is basically in place). Fix stat loading when entity is player.
- * Button to open the save directory.
- * Give dev toggles and add more dev commands for easier playtesting.
- * Clear up inconsistent input hints.
- * Add headers or some sort of description for every page.
- * Add art for every page.
- * Generic end boss for the demo.
- 
- - EXTRA -
- 
  * Curing and blessing from the church.
  * Quests.
  * Enchanting.
@@ -53,13 +40,13 @@ require "library/TSerial"
    - Entity placement
    - Entity customization
 
-]]--
+]]
 
 
 -- Global Variables
 
-world = newWorld()
-player = world:get("player")
+world = nil
+player = nil
 
 keyLShift = false
 keyRShift = false
@@ -83,6 +70,10 @@ local keyTimerDefault = 0.1
 
 local frameTimer = 0
 local frameTimerDefault = 0.03
+
+saving = false
+local saveTimer = 60
+local saveTimerDefault = 60
 
 
 -- Initialization
@@ -205,11 +196,35 @@ function love.update(dt)
     keyShift = keyLShift or keyRShift
     
     
+    -- Saving
+    
+    if saving then
+        saveTimer = saveTimer + dt
+        if saveTimer >= saveTimerDefault then
+            saveTimer = saveTimer - saveTimerDefault
+            
+            love.filesystem.write(player:get("name"), TSerial.pack(world:export(), false, true))
+        end
+    end
+    
+    
     -- Performance Enhancement
     
     love.timer.sleep(1/30 - dt)
     
     collectgarbage("collect")
+end
+
+
+-- Quit
+
+function love.quit()
+    if saving then
+        if screen.current ~= "quit" then screen:down("quit") end
+        return true
+    else
+        return false
+    end
 end
 
 

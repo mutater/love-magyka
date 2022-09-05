@@ -1,4 +1,5 @@
 require "script/node/art"
+require "script/node/class"
 require "script/node/effect"
 require "script/node/entity"
 require "script/node/item"
@@ -10,7 +11,7 @@ require "script/node/town"
 require "script/node/world"
 require "script/tools"
 
-json = require("library/json")
+local json = require("library/json")
 
 
 -- Misc Functions
@@ -57,6 +58,25 @@ function newArt(arg) -- Unedited
         
         art = Art(art)
         return art
+    end
+end
+
+function newClass(arg)
+    if type(arg) == "string" then
+        local class = newClass(setupString(arg, "Class"))
+        
+        if class then return class else return Class{name=arg} end
+    elseif type(arg) == "table" then
+        local class = setupTable(arg)
+        
+        
+        -- Parse stats and description into readable form
+        
+        if class.stats then class.stats = json.decode(class.stats) end
+        
+        if class.description then class.description = split(class.description, "\13\n") end
+        
+        return Class(class)
     end
 end
 
@@ -244,7 +264,9 @@ function newItem(arg)
         
         -- Parse description into table by splitting by newlines
         
-        if item.description then item.description = split(item.description, "\13\n") end
+        if item.description and type(item.description) == "string" then
+            item.description = split(item.description, "\13\n")
+        end
         
         
         -- Autoformat stackable bool
@@ -266,7 +288,7 @@ function newItem(arg)
         -- Parse effects and autoformat verbs if nil
         
         if item.effect then
-            item.effect = json.decode(item.effect)
+            if type(item.effect) == "string" then item.effect = json.decode(item.effect) end
             if item.effect[1] == nil then item.effect = {item.effect} end
             
             for k, v in ipairs(item.effect) do
@@ -412,9 +434,11 @@ function newTown(arg) -- Unedited
 end
 
 function newWorld(arg)
-    world = World{}
-    world.player = newEntity{name="Player"}
+    world = setupTable(arg)
+    
+    if world.player then world.player = newEntity(world.player)
+    else world.player = newEntity{name="Player"} end
     world.player:update()
     
-    return world
+    return World(world)
 end
