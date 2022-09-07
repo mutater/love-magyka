@@ -32,6 +32,11 @@ function setupTable(arg) -- Automatically formats as much of the table from the 
     return deepcopy(arg)
 end
 
+function decode(obj) -- Formats object if object is string
+    if type(obj) == "string" then return json.decode(obj)
+    else return obj end
+end
+
 
 -- Object Generators
 
@@ -91,14 +96,14 @@ function newEffect(arg)
         
         -- Parse hp and mp effects
         
-        if effect.hp and type(effect.hp) == "string" then effect.hp = json.decode(effect.hp) end
-        if effect.mp and type(effect.mp) == "string" then effect.mp = json.decode(effect.mp) end
+        if effect.hp then effect.hp = decode(effect.hp) end
+        if effect.mp then effect.mp = decode(effect.mp) end
         
         
         -- Parse stat effects and autoformat
         
         if effect.stats then
-            effect.stats = json.decode(effect.stats)
+            effect.stats = decode(effect.stats)
             
             for k, v in pairs(effect.stats) do
                 if type(v) ~= "table" then effect.stats[k] = {stat = k, value = v, opp = "+"} end
@@ -114,7 +119,7 @@ function newEffect(arg)
                 if effect.hit == nil then effect.hit = 0 end
                 if effect.noDodge == nil then effect.noDodge = true end
             else
-                if type(effect.passive) == "string" then effect.passive = json.decode(effect.passive) end
+                effect.passive = decode(effect.passive)
                 
                 if type(effect.passive) == "string" or effect.passive[1] == nil then
                     effect.passive = {effect.passive}
@@ -148,7 +153,15 @@ function newEntity(arg)
         else
             entity.inventory = {}
         end
-                
+        
+        if entity.passives then
+            for k, v in ipairs(entity.passives) do
+                entity.passives[k] = newEffect(v)
+            end
+        else
+            entity.passives = {}
+        end
+        
         if entity.equipment then
             for k, v in pairs(entity.equipment) do
                 if v ~= "" then entity.equipment[k] = newItem(entity.equipment[k]) end

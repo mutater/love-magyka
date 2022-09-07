@@ -313,6 +313,8 @@ screen = {
             draw:options({"Yes", "No"})
             
             if self.key == "y" then
+                world = newWorld{}
+                player = world:get("player")
                 player:setClass(self:get("class"))
                 player:set("name", self:get("name"))
                 self:down("map")
@@ -1055,7 +1057,8 @@ screen = {
         -- Apply Charon's Curse
         
         if self:get("stage") == "curse" then
-            player:set("hp", 1)
+            player:set("hp", player:get("stats").maxHp)
+            player:set("mp", player:get("stats").maxMp)
             player:applyPassive(newEffect("Charon's Curse"))
             self:set("stage", "input")
         

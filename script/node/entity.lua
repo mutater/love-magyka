@@ -29,7 +29,7 @@ Entity = Node{
     levelUp = function(self)
         self.stats.maxHp = math.ceil(self.stats.maxHp * (1.09 - self.level / 2000))
         self.stats.maxMp = math.ceil(self.stats.maxMp * (1.09 - self.level / 2000))
-        self:set("maxXp", math.ceil(self.maxXp * (1.11 - self.level / 2000))
+        self:set("maxXp", math.ceil(self.maxXp * (1.11 - self.level / 2000)))
         self:add("level", 1)
     end,
     
@@ -211,7 +211,7 @@ Entity = Node{
         if #self:get("passives") > 0 then
             for i = #self:get("passives"), 1, -1 do
                 local passive = self:get("passives")[i]
-                appendTable(text, passive:use(passive, self, self))
+                if passive:get("passiveType") ~= "stats" then appendTable(text, passive:use(passive, self, self)) end
                 
                 passive:add("turns", -1)
                 if passive:get("turns") <= 0 then

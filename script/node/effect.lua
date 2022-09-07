@@ -103,7 +103,7 @@ Effect = Node{
                 end
                 
                 -- Passives
-                if self.passive then
+                if type(effect.passive) == "table" and #effect.passive > 0 then
                     effect.passive = {}
                     for k, v in ipairs(self.passive) do
                         if rand(1, 100) <= v:get("chance") then
@@ -129,7 +129,6 @@ Effect = Node{
         local effectLine = ""
         local passiveLine = ""
         
-        local effectBool = true
         local effectTypes = {}
         local effectTotal = 0
         local effectPercent = 0
@@ -137,7 +136,9 @@ Effect = Node{
         local effectVerb = ""
         local effectPunctuation = "."
         
+        
         -- Action Line
+        
         local verb = self:get("verb")
         local preposition = self:get("preposition")
         
@@ -149,7 +150,9 @@ Effect = Node{
         if source == target then actionLine = actionLine.." %s." % parent:display()
         else actionLine = actionLine.."." end
         
+        
         -- Status Line
+        
         if effect.crit then statusLine = statusLine.." %s crits!" % source:display() end
         if effect.miss then statusLine = statusLine.." %s misses." % source:display() end
         if effect.dodge then statusLine = statusLine.." %s dodges." % target:display() end
@@ -157,7 +160,9 @@ Effect = Node{
         if effect.parry then statusLine = statusLine.." %s parries." % target:display() end
         --if effect.parry and effect.riposte then statusLine = statusLine.." %s parries and ripostes." % target:display() end
         
+        
         -- Effect Line
+        
         for k, v in pairs(effect) do
             if type(v) == "number" then
                 table.insert(effectTypes, "<%s>" % k) 
@@ -200,7 +205,9 @@ Effect = Node{
             end
         end
         
+        
         -- Passive Line
+        
         if effect.passive and #effect.passive > 0 then
             passiveLine = " %s" % target:display()
             for k, v in ipairs(effect.passive) do
@@ -213,7 +220,11 @@ Effect = Node{
             end
         end
         
+        
         -- Output
+        
+        if statusLine..effectLine..passiveLine == "" then statusLine = " %s is unaffected." % target:display() end
+        
         local line = "%s%s%s%s" % {actionLine, statusLine, effectLine, passiveLine}
         return line
     end,
