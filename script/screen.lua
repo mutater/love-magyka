@@ -265,6 +265,9 @@ screen = {
         if self:get("stage") == "name" then
             draw:header("New Game - Name")
             
+            draw:newline()
+            draw:text("Please type your name. Your name must be between 2 and 15 characters long.")
+            
             self:input(
                 {2, 15},
                 function()

@@ -214,7 +214,7 @@ draw = {
         local y = self.row
         w = w or 40
         
-        self:text("%s [Lvl 1 Warrior]" % {entity:get("name")}, x)
+        self:text("%s [Lvl 1 %s]" % {entity:get("name"), entity:get("class").name}, x)
         self:icon("icon/hp", x, self.row)
         self:bar(entity:get("hp"), entity:get("stats").maxHp, color.hp, color.gray48, w, "HP: ", "#", x + 2)
         self:icon("icon/mp", x, self.row)

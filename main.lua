@@ -15,6 +15,8 @@ require "library/TSerial"
 
 --[[
  
+ * Remove store names.
+ * Transfer all info to the database.
  * Carry stat.
  * Curing and blessing from the church.
  * Quests.

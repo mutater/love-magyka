@@ -3,6 +3,8 @@ devCommand = function(command)
     local word = command[1]
     local args = split(command[2], ", ")
     
+    local player = world:get("player")
+    
     if word == "battle" then
         if args[1] then
             screen:down("battle")
