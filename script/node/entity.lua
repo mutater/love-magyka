@@ -30,6 +30,8 @@ Entity = Node{
         self.stats.maxHp = math.ceil(self.stats.maxHp * (1.09 - self.level / 2000))
         self.stats.maxMp = math.ceil(self.stats.maxMp * (1.09 - self.level / 2000))
         self:set("maxXp", math.ceil(self.maxXp * (1.11 - self.level / 2000)))
+        self:set("hp", self.stats.maxHp)
+        self:set("mp", self.stats.maxMp)
         self:add("level", 1)
     end,
     

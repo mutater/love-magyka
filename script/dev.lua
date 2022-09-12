@@ -3,13 +3,20 @@ devCommand = function(command)
     local word = command[1]
     local args = split(command[2], ", ")
     
-    local player = world:get("player")
-    
     if word == "battle" then
         if args[1] then
             screen:down("battle")
             screen:set("enemy", {newEntity(args[1])}, "battle")
         end
+    
+    
+    elseif word == "s" then
+        world = newWorld{}
+        player = world:get("player")
+        player:set("name", "Developer")
+        player:setClass(newClass("Warrior"))
+        saving = false
+        screen:down("map")
     
     
     elseif word == "equip" then

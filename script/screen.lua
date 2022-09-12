@@ -19,7 +19,8 @@ screen = {
         newGame = {name="", stage="name", class=nil},
         continue = {saves=nil},
         map = {map=nil, portal=nil, hunting=false, steps=0},
-        town = {town=nil, store="", storeType=""},
+        town = {town=nil},
+        store = {items=nil, storeType=""},
         battle = {
             turn = 1,
             turnOrder = {},
@@ -152,8 +153,7 @@ screen = {
         end
         
         draw:newline()
-        draw:text("- Press a number or letter to select an option.")
-        draw:text("  Press [LEFT] and [RIGHT] to navigate pages. Press [ESC] to go back.")
+        draw:hint("- Press [LEFT] and [RIGHT] to switch pages.")
         
 		if self.key == "0" then self.key = "10"
         elseif self.key == "left" and left then self:add("page", -1)
@@ -170,8 +170,9 @@ screen = {
         draw:text("Currently seleced: {xp}%d{white} (Max: %d)." % {self:get("quantity"), maximum})
         
         draw:newline()
-        draw:text("- Press [LEFT] to select minimum. Press [RIGHT] to select maximum.")
-        draw:text("  Press [UP] and [DOWN] to change quantity. Press [ENTER] to confirm.")
+        draw:hint("- Press [LEFT] / [RIGHT] for min / max.")
+        draw:hint("  Press [UP] / [DOWN] to change quantity.")
+        draw:hint("  Press [ENTER] to confirm.")
         
         if self.key == "left" and maximum ~= 0 then self:set("quantity", 1)
         elseif self.key == "right" and maximum ~= 0 then self:set("quantity", maximum)
@@ -189,7 +190,7 @@ screen = {
         draw:text(" : "..self:get("input").."_")
         
         draw:newline()
-        draw:text("- Please type an answer.")
+        draw:hint("- Please type an answer.")
         
         local length = #self:get("input")
         
@@ -316,11 +317,11 @@ screen = {
             draw:options({"Yes", "No"})
             
             if self.key == "y" then
-                world = newWorld{}
-                player = world:get("player")
                 player:setClass(self:get("class"))
                 player:set("name", self:get("name"))
                 self:down("map")
+                saving = true
+                autosave = true
             elseif self.key == "n" or self.key == "escape" then self:set("stage", "class input") end
         end
     end,
@@ -357,6 +358,8 @@ screen = {
             function(save)
                 world = newWorld(save)
                 player = world:get("player")
+                saving = true
+                autosave = true
                 self:down("map")
             end,
             function() if self.key == "escape" then self:up() end end,
@@ -375,7 +378,6 @@ screen = {
         
         if self:get("map") == nil then self:set("map", newMap(world:get("currentMap"))) end
         
-        if not saving then saving = true end
         
         -- Draw Variables
         
@@ -410,8 +412,8 @@ screen = {
         draw:options({"Camp", "Hunt"})
         
         draw:newline()
-        draw:text("- Press [UP], [DOWN], [LEFT], or [RIGHT] to move.")
-        draw:text("  Press a letter to select an option.")
+        draw:hint("- Use arrow keys to move.")
+        draw:hint("  Press a letter to select an option.")
         
         
         -- Input Variables
@@ -498,45 +500,56 @@ screen = {
         -- Get town if nil
         
         if self:get("town") == nil then self:set("town", newTown(self:get("portal", "map").name)) end
+        local town = self:get("town")
         
         
         -- Draw
         
         draw:initScreen(38, "screen/town")
-        draw:header("Town - "..self:get("town"):get("name"))
+        draw:header("Town - "..town.name)
         
         draw:newline()
         draw:mainStats(player)
         
+        local storeNames = {}
+        for k, v in ipairs{"General Store", "Blacksmith", "Arcanist", "Healer", "Alchemist"} do
+            if town.stores[v] then table.insert(storeNames, v) end
+        end
+        appendTable(storeNames, {"Flea Market", "Inn"})
+        
         draw:newline()
-        local storeNames = self:get("town").storeNames
-        local storeTypes = self:get("town").storeTypes
         draw:optionsNumbered(storeNames)
         
         
         -- Input
         
         if isInRange(self.key, 1, #storeNames) then
-            local storeType = storeTypes[tonumber(self.key)]
-            self:set("store", self:get("town").stores[storeType])
-            self:set("storeType", storeType)
+            local storeType = storeNames[tonumber(self.key)]
             self:down("store")
+            self:set("items", town.stores[storeType])
+            self:set("storeType", storeType)
         elseif self.key == "escape" then self:up() end
     end,
     
     store = function(self)
-        local store = self:get("store", "town")
-        
+        local items = self:get("items")
+        local storeType = self:get("storeType")
         
         -- Draw
         
-        draw:initScreen(38, "screen/"..self:get("storeType", "town"))
+        draw:initScreen(38, "screen/"..storeType)
+        draw:header("Store - "..storeType)
         
         local options = {}
+        local hasInventory = true
         
-        if store.sell then table.insert(options, "Sell")
-        elseif store.forge then table.insert(options, "Forge")
-        elseif store.enchant then table.insert(options, "Enchant") end
+        if storeType == "Flea Market" then
+            table.insert(options, "Sell")
+            hasInventory = false
+        elseif storeType == "Inn" then
+            hasInventory = false
+        elseif storeType == "Blacksmith" then table.insert(options, "Forge")
+        elseif storeType == "Arcanist" then table.insert(options, "Enchant") end
         
         if #options > 0 then
             draw:newline()
@@ -546,21 +559,23 @@ screen = {
         
         -- List store items
         
-        self:pages(
-            store.items,
-            function(item) return item:display().."  <gp> "..item:get("value") end,
-            function(item)
-                self:down("inspectItemStore")
-                self:set("item", item, "inspectItemStore")
-            end,
-            function() self:up() end
-        )
+        if hasInventory then
+            self:pages(
+                items,
+                function(item) return item:display().."  <gp> "..item:get("value") end,
+                function(item)
+                    self:down("inspectItemStore")
+                    self:set("item", item, "inspectItemStore")
+                end,
+                function() self:up() end
+            )
+        elseif self.key == "escape" then self:up() end
         
         
         -- Input
         
-        if self.key == "s" and store.sell then self:down("inventorySell")
-        elseif self.key == "f" and store.forge then
+        if self.key == "s" and storeType == "Flea Market" then self:down("inventorySell")
+        elseif self.key == "f" and storeType == "Blacksmith" then
             self:down("crafting")
             self:set("station", "forge")
         end
@@ -578,9 +593,6 @@ screen = {
         
         draw:newline()
         draw:options({"Inventory", "Equipment", "Arts", "Crafting", "Quests", "Stats", "Options"})
-        
-        draw:newline()
-        draw:text("- Press a letter to select an option.")
         
         
         -- Input
@@ -695,9 +707,6 @@ screen = {
             if playerEquipment[v] ~= "" then draw:text("(%d) %s: %s" % {i, v, playerEquipment[v]:display(0)})
             else draw:text("(%d) %s: {gray48}None" % {i, v}) end
         end
-        
-        draw:newline()
-        draw:text("- Press a number to select an option. Press ESC to go back.")
         
         
         -- Input
@@ -1013,6 +1022,13 @@ screen = {
             for k, v in ipairs(lootEntity:get("inventory")) do
                 player:addItem(v[1], v[2])
             end
+            
+            hp = math.floor(player:get("stats").maxHp * 0.66)
+            mp = math.floor(player:get("stats").maxMp * 0.66)
+            
+            if hp > player:get("hp") then player:set("hp", hp) end
+            if mp > player:get("mp") then player:set("mp", mp) end
+            
             self:set("stage", "output")
         
         
@@ -1060,8 +1076,8 @@ screen = {
         -- Apply Charon's Curse
         
         if self:get("stage") == "curse" then
-            player:set("hp", player:get("stats").maxHp)
-            player:set("mp", player:get("stats").maxMp)
+            player:set("hp", math.floor(player:get("stats").maxHp * 0.5))
+            player:set("mp", math.floor(player:get("stats").maxMp * 0.5))
             player:applyPassive(newEffect("Charon's Curse"))
             self:set("stage", "input")
         
@@ -1103,9 +1119,6 @@ screen = {
             elseif item:get("equipment") then draw:options({"Equip", "Discard"})
             else draw:options({"Discard"}) end
             
-            draw:newline()
-            draw:text("- Press a key to select an option.")
-            
             if self.key == "e" and item:get("equipment") then
                 player:equip(item)
                 self:set("stage", "equip")
@@ -1134,7 +1147,7 @@ screen = {
             draw:newline()
             draw:text("Equipped "..item:display()..".")
             draw:newline()
-            draw:text("- Press [ENTER] to continue.")
+            draw:hint("- Press [ENTER] to continue.")
             
             if self:cancel() then self:up() end
         
@@ -1146,7 +1159,7 @@ screen = {
             for k, v in ipairs(self:get("text")) do draw:text(v) end
             
             draw:newline()
-            draw:text("- Press [ENTER] to continue.")
+            draw:hint("- Press [ENTER] to continue.")
             
             if self:cancel() then self:set("stage", "output") end
         
@@ -1167,7 +1180,7 @@ screen = {
             draw:newline()
             draw:text("Discarded %s." % {discardText})
             draw:newline()
-            draw:text("- Press [ENTER] to continue.")
+            draw:hint("- Press [ENTER] to continue.")
             
             if self:cancel() then
                 player:removeItem(item, self:get("quantity"))
@@ -1210,7 +1223,6 @@ screen = {
             draw:newline()
             draw:options({"Sell"})
             draw:newline()
-            draw:text("- Press a key to select an option. Press [ESC] to go back.")
             
             if self.key == "s" then
                 if item:get("stackable") then
@@ -1242,7 +1254,7 @@ screen = {
             draw:newline()
             draw:text("Sold %s." % {sellText})
             draw:newline()
-            draw:text("- Press [ENTER] to continue.")
+            draw:hint("- Press [ENTER] to continue.")
             
             if self:cancel() then
                 player:removeItem(item, self:get("quantity"))
@@ -1287,7 +1299,7 @@ screen = {
             draw:newline()
             draw:text("Bought %s." % {buyText})
             draw:newline()
-            draw:text("- Press [ENTER] to continue.")
+            draw:hint("- Press [ENTER] to continue.")
             
             if self:cancel() then
                 player:addItem(newItem(item), self:get("quantity"))
@@ -1533,7 +1545,6 @@ screen = {
         draw:options({"Yes", "No"})
         
         draw:newline()
-        draw:text(" - Press a letter to select an option or press [ESC] to go back.")
         
         
         -- Input

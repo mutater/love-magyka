@@ -15,7 +15,6 @@ require "library/TSerial"
 
 --[[
  
- * Remove store names.
  * Transfer all info to the database.
  * Carry stat.
  * Curing and blessing from the church.
@@ -47,8 +46,8 @@ require "library/TSerial"
 
 -- Global Variables
 
-world = nil
-player = nil
+world = newWorld{}
+player = world:get("player")
 
 keyLShift = false
 keyRShift = false
@@ -74,8 +73,8 @@ local frameTimer = 0
 local frameTimerDefault = 0.03
 
 saving = false
-local saveTimer = 60
-local saveTimerDefault = 60
+local saveTimer = 0
+local saveTimerDefault = 30
 
 
 -- Initialization
@@ -172,6 +171,7 @@ function love.keypressed(key)
             devCommand(command)
             command = ""
             console = false
+            love.keyboard.setKeyRepeat(false)
         end
     end
 end
@@ -224,9 +224,8 @@ function love.quit()
     if saving then
         if screen.current ~= "quit" then screen:down("quit") end
         return true
-    else
-        return false
     end
+    return false
 end
 
 

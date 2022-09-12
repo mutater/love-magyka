@@ -431,14 +431,11 @@ function newTown(arg) -- Unedited
     elseif type(arg) == "table" then
         local town = deepcopy(arg)
         
-        town.storeNames = {}
-        town.storeTypes = {}
-        
         if town.stores then
-            for k, v in pairs(town.stores) do
-                town.stores[k] = newStore(v, town.name)
-                table.insert(town.storeNames, town.stores[k].name)
-                table.insert(town.storeTypes, k)
+            for _, v in pairs(town.stores) do
+                for k, item in pairs(v) do
+                    v[k] = newItem(item)
+                end
             end
         end
         

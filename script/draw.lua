@@ -214,11 +214,11 @@ draw = {
         local y = self.row
         w = w or 40
         
-        self:text("%s [Lvl 1 %s]" % {entity:get("name"), entity:get("class").name}, x)
+        self:text("{gray78}%s [Lvl 1 %s]" % {entity:get("name"), entity:get("class").name}, x)
         self:icon("icon/hp", x, self.row)
-        self:bar(entity:get("hp"), entity:get("stats").maxHp, color.hp, color.gray48, w, "HP: ", "#", x + 2)
+        self:bar(entity:get("hp"), entity:get("stats").maxHp, color.hp, color.gray48, w, "{gray78}HP: ", "#", x + 2)
         self:icon("icon/mp", x, self.row)
-        self:bar(entity:get("mp"), entity:get("stats").maxMp, color.mp, color.gray48, w, "MP: ", "#", x + 2)
+        self:bar(entity:get("mp"), entity:get("stats").maxMp, color.mp, color.gray48, w, "{gray78}MP: ", "#", x + 2)
     end,
     
     hpmpAlt = function(self, entity, x, y) -- Draw name and hp and mp bars at a location
@@ -235,9 +235,9 @@ draw = {
         
         self:hpmp(entity, w)
         self:icon("icon/xp", x, self.row)
-        self:bar(entity:get("xp"), entity:get("maxXp"), color.xp, color.gray48, w, "XP: ", "#", x + 2)
+        self:bar(entity:get("xp"), entity:get("maxXp"), color.xp, color.gray48, w, "{gray78}XP: ", "#", x + 2)
         self:icon("icon/gp", x, self.row)
-        self:text("Gold: %d" % {entity:get("gp")}, x + 2)
+        self:text("{gray78}Gold: %d" % {entity:get("gp")}, x + 2)
     end,
     
     options = function(self, options, x, y) -- Draw options with the first letter in square brackets
@@ -298,6 +298,10 @@ draw = {
         end
         
         self:text(labelText, x + width + 1)
+    end,
+    
+    hint = function(self, text) -- Draw text in the hint color
+        self:text("{gray58}"..text)
     end,
     
     border = function(self, subWidth) -- Draw a border around the screen
