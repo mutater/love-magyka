@@ -169,17 +169,51 @@ Entity = Node{
         local statChanges = {}
         for k, v in pairs(self:get("stats")) do statChanges[k] = {["+"] = 0, ["*"] = 100, ["="] = false} end
         
+        
+        -- Equipment Stats
+        
+        local weight = 0
         for k, v in pairs(self:get("equipment")) do
             if v ~= "" and v:get("stats") then
                 for _, stat in pairs(v:get("stats")) do table.insert(stats, stat) end
+                
+                if v:get("weight") then weight = weight + v:get("weight") end
             end
         end
+        
+        
+        -- Equipment weight
+        
+        local carry = self:get("stats").carry
+        
+        local loadDepraved = 3
+        local loadLight = math.ceil(carry / 2) + 2
+        local loadMedium = carry + 2
+        local loadHeavy = carry * 2 + 2
+        
+        print(loadDepraved)
+        print(loadLight)
+        print(loadMedium)
+        print(loadHeavy)
+        print(carry)
+        
+        if weight <= loadDepraved then print("Depraved Load")
+        elseif weight <= loadLight then print("Light Load")
+        elseif weight <= loadMedium then print("Medium Load")
+        elseif weight <= loadHeavy then print("Heavy Load")
+        else print ("Over-Encumbered Load") end
+        
+        
+        -- Passive Stats
         
         for k, v in pairs(self:get("passives")) do
             if v:get("stats") then
                 for _, stat in pairs(v:get("stats")) do table.insert(stats, stat) end
             end
         end
+        
+        
+        -- Format stats into one type
         
         for k, v in pairs(stats) do
             if v.opp == "=" then
@@ -191,6 +225,9 @@ Entity = Node{
                 statChanges[v.stat]["+"] = statChanges[v.stat]["+"] + v.value
             end
         end
+        
+        
+        -- Apply stat changes to self stats
         
         for k, v in pairs(statChanges) do
             local baseStat = self:get("baseStats")[k]

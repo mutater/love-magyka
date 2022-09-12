@@ -3,7 +3,7 @@
 
 equipment = {
     "weapon",
-    "helmet",
+    "head",
     "body",
     "hands",
     "legs",

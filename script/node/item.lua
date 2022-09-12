@@ -10,6 +10,7 @@ Item = Node{
     equipment = false,
     stats = nil,
     slot = "",
+    weight = 0,
     consumable = false,
     effect = nil,
     target = "entity",

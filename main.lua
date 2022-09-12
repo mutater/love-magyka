@@ -15,8 +15,8 @@ require "library/TSerial"
 
 --[[
  
+ * Carry stat. Add debuffs and such.
  * Transfer all info to the database.
- * Carry stat.
  * Curing and blessing from the church.
  * Quests.
  * Enchanting.
@@ -54,7 +54,7 @@ keyRShift = false
 keyShift = false
 input = {}
 
-for k, v in ipairs({"up", "down", "left", "right"}) do
+for k, v in ipairs{"up", "down", "left", "right"} do
     input[v] = {key="up", pressed=false, justPressed=false, delay=0}
 end
 

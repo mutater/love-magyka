@@ -206,6 +206,7 @@ function newEntity(arg)
             dodge = 4,
             crit = 4,
             critDamage = 100,
+            carry = 12,
         }
         
         if entity.enemy then
