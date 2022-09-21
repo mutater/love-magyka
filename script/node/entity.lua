@@ -191,17 +191,11 @@ Entity = Node{
         local loadMedium = carry + 2
         local loadHeavy = carry * 2 + 2
         
-        print(loadDepraved)
-        print(loadLight)
-        print(loadMedium)
-        print(loadHeavy)
-        print(carry)
-        
-        if weight <= loadDepraved then print("Depraved Load")
-        elseif weight <= loadLight then print("Light Load")
-        elseif weight <= loadMedium then print("Medium Load")
-        elseif weight <= loadHeavy then print("Heavy Load")
-        else print ("Over-Encumbered Load") end
+        if weight <= loadDepraved then self:applyPassive(newEffect("Unencumbered"))
+        elseif weight <= loadLight then self:applyPassive(newEffect("Light Load"))
+        elseif weight <= loadMedium then self:removePassive("load")
+        elseif weight <= loadHeavy then self:applyPassive(newEffect("Heavy Load"))
+        else self:applyPassive(newEffect("Overencumbered")) end
         
         
         -- Passive Stats
@@ -267,16 +261,32 @@ Entity = Node{
         if type(turns) == "table" then turns = rand(turns) end
         
         local passiveFound = false
-        for k, v in ipairs(self:get("passives")) do
-            if v:get("name") == passive:get("name") then
+        for i = #self:get("passives"), 1, -1 do
+            local p = self:get("passives")[i]
+            if p:get("name") == passive:get("name") then
                 passiveFound = true
-                v:set("turns", math.max(v:get("turns"), passive:get("turns")))
+                p:set("turns", math.max(v:get("turns"), passive:get("turns")))
+                break
+            end
+            
+            if p:get("passiveType") == passive:get("passiveType") then
+                table.remove(self:get("passives"), i)
                 break
             end
         end
         
         if not passiveFound then table.insert(self:get("passives"), passive) end
         self:update()
+    end,
+    
+    removePassive = function(self, passiveType)
+        for i = #self:get("passives"), 1, -1 do
+            local p = self:get("passives")[i]
+            if p:get("passiveType") == passiveType then
+                table.remove(self:get("passives"), i)
+                break
+            end
+        end
     end,
     
     attack = function(self, target)
