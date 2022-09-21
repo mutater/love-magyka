@@ -4,6 +4,7 @@ db = assert(sqlite3.open("data/data.db"))
 require "script/color"
 require "script/dev"
 require "script/draw"
+require "script/input"
 require "script/generator"
 require "script/globals"
 require "script/screen"
@@ -15,7 +16,7 @@ require "library/TSerial"
 
 --[[
  
- * Carry stat. Add debuffs and such.
+ * Mouse asdf.
  * Transfer all info to the database.
  * Curing and blessing from the church.
  * Quests.
@@ -52,10 +53,10 @@ player = world:get("player")
 keyLShift = false
 keyRShift = false
 keyShift = false
-input = {}
+asdf = {}
 
 for k, v in ipairs{"up", "down", "left", "right"} do
-    input[v] = {key="up", pressed=false, justPressed=false, delay=0}
+    asdf[v] = {key="up", pressed=false, justPressed=false, delay=0}
 end
 
 backspace = false
@@ -103,7 +104,8 @@ function love.keyreleased(key)
     if key == "lshift" then keyLShift = false end
     if key == "rshift" then keyRShift = false end
     
-    if input[key] then input[key].pressed = false end
+    if asdf[key] then asdf[key].pressed = false end
+    input:keyreleased(key)
 end
 
 function love.keypressed(key)
@@ -120,11 +122,11 @@ function love.keypressed(key)
     
     -- Give movement keys a delay if none of the others are pressed
     
-    if input[key] then
-        input[key].pressed = true
+    if asdf[key] then
+        asdf[key].pressed = true
         
         local delay = true
-        for k, v in pairs(input) do
+        for k, v in pairs(asdf) do
             if v.pressed and k ~= key then
                 delay = false
                 break
@@ -132,17 +134,17 @@ function love.keypressed(key)
         end
         
         if delay then
-            input[key].delay = -0.1
-            input[key].justPressed = true
+            asdf[key].delay = -0.1
+            asdf[key].justPressed = true
         else
-            input[key].delay = 0
+            asdf[key].delay = 0
         end
     end
     
     
     -- Send key to game loop
     
-    if not console then screen.key = key end
+    if not console then input:keypressed(key) end
     
     
     -- Console Input
@@ -176,17 +178,29 @@ function love.keypressed(key)
     end
 end
 
+function love.mousepressed(x, y, button, istouch)
+    input:mousepressed(x, y, button)
+end
+
+function love.mousereleased(x, y, button, istouch)
+    input:mousereleased(x, y, button)
+end
+
+function love.mousemoved(x, y, dx, dy, istouch)
+    input:mousemoved(x, y)
+end
+
 
 -- Update
 
 function love.update(dt)
     
-    -- Input Key Repetition
+    -- asdf Key Repetition
     
     keyTimer = keyTimer + dt
     if keyTimer >= keyTimerDefault then
         keyTimer = keyTimer - keyTimerDefault
-        for k, v in pairs(input) do
+        for k, v in pairs(asdf) do
             v.delay = v.delay + dt
             if v.delay > 0 and v.pressed then v.justPressed = true end
         end
@@ -208,7 +222,6 @@ function love.update(dt)
             love.filesystem.write(player:get("name"), TSerial.pack(world:export(), false, true))
         end
     end
-    
     
     -- Performance Enhancement
     
@@ -235,6 +248,7 @@ function love.draw()
     -- Game Loop
     
     screen:update(0)
+    input:update()
     
     
     -- Console Drawing

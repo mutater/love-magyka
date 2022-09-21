@@ -265,7 +265,7 @@ Entity = Node{
             local p = self:get("passives")[i]
             if p:get("name") == passive:get("name") then
                 passiveFound = true
-                p:set("turns", math.max(v:get("turns"), passive:get("turns")))
+                p:set("turns", math.max(p:get("turns"), passive:get("turns")))
                 break
             end
             
@@ -275,8 +275,10 @@ Entity = Node{
             end
         end
         
-        if not passiveFound then table.insert(self:get("passives"), passive) end
-        self:update()
+        if not passiveFound then
+            table.insert(self:get("passives"), passive)
+            self:update()
+        end
     end,
     
     removePassive = function(self, passiveType)

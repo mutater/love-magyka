@@ -12,82 +12,6 @@ draw = {
     
     -- Base
     
-    text = function(self, text, ...) -- Draw cell-snapped text
-        local arg = {...}
-        local x = 4
-        local c = "white"
-        
-        if #arg == 1 then
-            if type(arg[1]) == "number" then x = arg[1]
-            elseif type(arg[1]) == "string" then c = arg[1]
-            elseif type(arg[1]) == "table" then c = arg[1] end
-        elseif #arg == 2 then
-            x = arg[1]
-            if type(arg[2]) == "number" then self.row = arg[2]
-            elseif type(arg[2]) == "string" then c = arg[2]
-            elseif type(arg[2]) == "table" then c = arg[2] end
-        elseif #arg == 3 then
-            x = arg[1]
-            y = arg[2]
-            c = arg[3]
-        end
-        
-        local oText = text
-        local parsedText = {}
-        local parsedTextLength = 0
-        local parsedColors = {}
-        local parsedIcons = {}
-         
-        if text[1] ~= "{" then
-            local colorName = ""
-            if type(c) == "string" then colorName = c
-            else colorName = "custom" end
-            text = "{%s}%s" % {colorName, text}
-        end
-        
-        while count(text, "{") > 0 do
-            local i = text:find("{", 1, true)
-            local j = text:find("}", 1, true)
-            
-            local colorName = text:sub(i + 1, j - 1)
-            if colorName == "custom" then table.insert(parsedColors, c)
-            elseif color[colorName] then table.insert(parsedColors, color[colorName])
-            else table.insert(parsedColors, color[c]) end
-            text = text:sub(j + 1)
-            
-            if count(text, "{") > 0 then bufferText = text:sub(1, text:find("{", 1, true) - 1)
-            else bufferText = text end
-            
-            while count(bufferText, "<") > 0 do  -- Parse icons
-                local k = bufferText:find("<", 1, true)
-                local l = bufferText:find(">", 1, true)
-                
-                parsedIcons[k + parsedTextLength] = "icon/"..bufferText:sub(k + 1, l - 1)
-                bufferText = bufferText:gsub(bufferText:sub(k, l), " ")
-            end
-            
-            parsedTextLength = parsedTextLength + #bufferText
-            table.insert(parsedText, bufferText)
-            text = text:sub(#bufferText)
-        end
-        
-        if #parsedText ~= #parsedColors then
-            parsedText = {oText}
-            text = oText
-            parsedColors = {c}
-        end
-        
-        local i = 0
-        for k, v in ipairs(parsedText) do
-            love.graphics.setColor(parsedColors[k])
-            love.graphics.print(v, (x + i - 1)*self.width, (self.row - 1)*self.height)
-            i = i + string.len(v)
-        end
-        
-        for k, v in pairs(parsedIcons) do self:icon(v, k + x - 1) end
-        
-        self.row = self.row + 1
-    end,
     
     icon = function(self, i, ...) -- Draw a cell-sized icon
         local arg = {...}
@@ -137,13 +61,6 @@ draw = {
         self:icon(i, x, y, 8)
     end,
     
-    newline = function(self) -- Go to next row
-        self.row = self.row + 1
-    end,
-    
-    top = function(self) -- Reset rows
-        self.row = 3
-    end,
     
     
     -- Compound
@@ -319,5 +236,107 @@ draw = {
     
     header = function(self, str) -- Draw a header (QoL)
         self:text(" -= %s {white}=-" % str)
+    end,
+}
+
+draw = {
+    width = 10,
+    height = 20,
+    xOffset = 0,
+    yOffset = 0,
+    subLeft = 38,
+    autoSpace = true,
+    
+    
+    space = function(self, y)
+        self.yOffset = self.yOffset + y
+    end,
+    
+    reset = function(self, x, y)
+        local x = x or 10
+        local y = y or 20
+        
+        self.xOffset = x
+        self.yOffset = y
+        self:setColor(color.white)
+    end,
+    
+    getFW = function(self, text)
+        text = text or " "
+        return love.graphics.getFont():getWidth(text)
+    end,
+    
+    getFH = function(self)
+        return love.graphics.getFont():getHeight()
+    end,
+    
+    setColor = function(self, c)
+        local c = c
+        if type(c) == "string" then
+            if color[c] then c = color[c]
+            else c = color.white end
+        end
+        love.graphics.setColor(c)
+    end,
+    
+    rectangle = function(self, mode, x, y, w, h, rx, ry)
+        love.graphics.rectangle(mode, self.xOffset + x, self.yOffset + y, w, h, rx, ry)
+        if self.autoSpace then self:space(h) end
+    end,
+    
+    text = function(self, text, x, y)
+        local font = love.graphics.getFont()
+        local text = text
+        local oText = text
+        local r, g, b, a = love.graphics.getColor()
+        local c = {r, g, b}
+        local parsedText = {}
+        local parsedTextLength = 0
+        local parsedColors = {}
+        local parsedIcons = {}
+         
+        if text[1] ~= "{" then text = "{ }"..text end
+        
+        while count(text, "{") > 0 do
+            local i = text:find("{", 1, true)
+            local j = text:find("}", 1, true)
+            
+            local colorName = text:sub(i + 1, j - 1)
+            if color[colorName] then table.insert(parsedColors, color[colorName])
+            else table.insert(parsedColors, c) end
+            text = text:sub(j + 1)
+            
+            if count(text, "{") > 0 then bufferText = text:sub(1, text:find("{", 1, true) - 1)
+            else bufferText = text end
+            
+            while count(bufferText, "<") > 0 do  -- Parse icons
+                local k = bufferText:find("<", 1, true)
+                local l = bufferText:find(">", 1, true)
+                
+                parsedIcons[k + parsedTextLength] = "icon/"..bufferText:sub(k + 1, l - 1)
+                bufferText = bufferText:gsub(bufferText:sub(k, l), " ")
+            end
+            
+            parsedTextLength = parsedTextLength + #bufferText
+            table.insert(parsedText, bufferText)
+            text = text:sub(#bufferText)
+        end
+        
+        if #parsedText ~= #parsedColors then
+            parsedText = {oText}
+            text = oText
+            parsedColors = {color.white}
+        end
+        
+        local i = 0
+        for k, v in ipairs(parsedText) do
+            love.graphics.setColor(parsedColors[k])
+            love.graphics.print(v, self.xOffset + x + (i) * self:getFW(), y + self.yOffset)
+            i = i + string.len(v)
+        end
+        
+        for k, v in pairs(parsedIcons) do self:icon(v, k + x - 1) end
+        
+        if self.autoSpace then self:space(font:getHeight()) end
     end,
 }

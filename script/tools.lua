@@ -145,3 +145,9 @@ function deepcopy(orig) -- Recursively copies a table
     end
     return copy
 end
+
+function pointInRect(px, py, rx, ry, rw, rh) -- Determins if a point is inside of a rectangle
+    if px < rx or px > rx + rw then return false end
+    if py < ry or py > ry + rh then return false end
+    return true
+end

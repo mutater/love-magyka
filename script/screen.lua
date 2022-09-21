@@ -1,4 +1,5 @@
 require "script/globals"
+require "script/input"
 require "script/tools"
 require "script/generator"
 
@@ -8,8 +9,8 @@ screen = {
     
     -- Variables
     
-    width = math.floor(love.graphics.getWidth() / 10),
-    height = math.floor(love.graphics.getHeight() / 20),
+    width = love.graphics.getWidth(),
+    height = love.graphics.getHeight(),
     
     current = "title",
     post = "title",
@@ -224,8 +225,7 @@ screen = {
     -- SCREENS --
     
     title = function(self)
-        draw:border(0)
-        draw:top()
+        draw:reset(10, 20)
         
         local magyka = {
             "  .x8888x.:d8888:.:d888b                                        ,688889,                    ",
@@ -244,14 +244,18 @@ screen = {
             "  ..................................... *68889*` ..... ~` ..... By Vincent G, aka Mutater ..",
         }
         
-        for i = 1, 14 do draw:text(magyka[i], {0.15, 0.55 - i/50, 0.5 + i/25}) end
+        for i = 1, 14 do
+            draw:setColor{0.15, 0.55 - i/50, 0.5 + i/25}
+            draw:text(magyka[i], 0, 0)
+        end
+        draw:setColor("white")
         
-        draw:newline()
-        draw:options({"New Game", "Continue", "Options", "Quit"})
+        draw:space(20)
+        local option = input:options(10, 0, {"New Game", "Continue", "Options", "Quit"})
         
-        if self.key == "n" then self:down("newGame")
-        elseif self.key == "c" then self:down("continue")
-        elseif self.key == "q" then love.event.quit() end
+        if option == "n" then devCommand("s")
+        elseif option == "c" then self:down("continue")
+        elseif option == "q" then love.event.quit() end
     end,
     
     newGame = function(self)
