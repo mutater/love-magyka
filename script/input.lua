@@ -126,7 +126,7 @@ input = {
         
         draw.autoSpace = false
         draw:setColor("gray28")
-        draw:rectangle("fill", x, 0, 3 * draw:getFW(), (length * 2 - 1) * draw:getFH())
+        draw:rectangle("fill", x, 0, 3 * 10, (length * 2 - 1) * 20)
         draw.autoSpace = true
         
         for k, v in ipairs(options) do
@@ -139,7 +139,7 @@ input = {
             end
             
             draw:setColor("white")
-            if k < length then draw:text("|", x + draw:getFW(), 0) end
+            if k < length then draw:text("|", x + 10, 0) end
         end
         
         return option

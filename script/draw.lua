@@ -13,37 +13,7 @@ draw = {
     -- Base
     
     
-    icon = function(self, i, ...) -- Draw a cell-sized icon
-        local arg = {...}
-        local x = 4
-        local c = color.white
-        local s = 1
-        
-        if #arg == 1 then
-            if type(arg[1]) == "number" then x = arg[1]
-            elseif type(arg[1]) == "table" then c = arg[1] end
-        elseif #arg == 2 then
-            x = arg[1]
-            if type(arg[2]) == "number" then self.row = arg[2]
-            elseif type(arg[2]) == "table" then c = arg[2] end
-        elseif #arg == 3 then
-            x = arg[1]
-            self.row = arg[2]
-            if type(arg[3]) == "number" then s = arg[3]
-            elseif type(arg[3]) == "table" then c = arg[3] end
-        elseif #arg == 4 then
-            x = arg[1]
-            y = arg[2]
-            c = arg[3]
-            s = arg[4]
-        end
-        
-        if type(i) == "string" and image[i] then i = image[i]
-        elseif type(i) == "string" then i = image["icon/default"] end
-        
-        love.graphics.setColor(c)
-        love.graphics.draw(i, (x - 1)*self.width, (self.row - 1)*self.height, 0, s)
-    end,
+    
     
     rect = function(self, c, x, y, w, h) -- Draw a cell-sized rectangle
         if type(c) == "string" then c = color[c] end
@@ -248,6 +218,8 @@ draw = {
     autoSpace = true,
     
     
+    -- Main Functions
+    
     space = function(self, y)
         self.yOffset = self.yOffset + y
     end,
@@ -259,15 +231,6 @@ draw = {
         self.xOffset = x
         self.yOffset = y
         self:setColor(color.white)
-    end,
-    
-    getFW = function(self, text)
-        text = text or " "
-        return love.graphics.getFont():getWidth(text)
-    end,
-    
-    getFH = function(self)
-        return love.graphics.getFont():getHeight()
     end,
     
     setColor = function(self, c)
@@ -282,6 +245,9 @@ draw = {
     setLine = function(self, s)
         love.graphics.setLineWidth(s)
     end,
+    
+    
+    -- Drawing Functions
     
     rectangle = function(self, mode, x, y, w, h, rx, ry)
         local x = x or 0
@@ -339,12 +305,91 @@ draw = {
         local i = 0
         for k, v in ipairs(parsedText) do
             love.graphics.setColor(parsedColors[k])
-            love.graphics.print(v, self.xOffset + x + (i) * self:getFW(), y + self.yOffset)
+            love.graphics.print(v, self.xOffset + x + i * 10, y + self.yOffset)
             i = i + string.len(v)
         end
         
-        for k, v in pairs(parsedIcons) do self:icon(v, k + x - 1) end
+        for k, v in pairs(parsedIcons) do
+            self:image(v, x + (k - 1) * 10, y)
+        end
         
         if self.autoSpace then self:space(font:getHeight()) end
+    end,
+    
+    image = function(self, i, ...)
+        local arg = {...}
+        local i = i
+        local x = self.xOffset
+        local y = self.yOffset
+        local s = 1
+        
+        if #arg == 1 then
+            x = arg[1] + self.xOffset
+        elseif #arg == 2 then
+            x = arg[1] + self.xOffset
+            y = arg[2] + self.yOffset
+        elseif #arg == 3 then
+            x = arg[1] + self.xOffset
+            y = arg[2] + self.yOffset
+            s = arg[3]
+        end
+        
+        if type(i) == "string" and image[i] then i = image[i]
+        elseif type(i) == "string" then i = image["image/default"] end
+        
+        love.graphics.draw(i, x, y, 0, s)
+    end,
+    
+    -- Compound Functions
+    
+    
+    bar = function(self, current, maximum, fillColor, emptyColor, width, label, form, x, y)
+        local x = x or 0
+        local y = y or 0
+        local label = label or ""
+        
+        self:setColor(emptyColor)
+        if current > 0 then self:setColor(fillColor) end
+        
+        local fillLength = math.ceil((current / maximum) * width)
+
+        self:image("icon/bar_left", x, y)
+        for i = 1, width - 1 do
+            if i > fillLength then self:setColor(emptyColor) end
+            self:image("icon/bar_middle", x + i * 10, y)
+        end
+        self:image("icon/bar_right", x + (width - 1) * 10, y)
+        
+        local labelText = ""
+        if form == "%" or form == "percent" then
+            labelText = label..tostring(math.ceil(current / maximum * 100)).."%"
+        elseif form == "#" or form == "number" then
+            labelText = label.."%d/%d" % {current, maximum}
+        else
+            labelText = ""
+        end
+        
+        self:setColor("white")
+        self:text(labelText, x + (width + 1) * 10, y)
+    end,
+    
+    hpmp = function(self, entity, w)
+        w = w or 40
+        
+        self:text("{gray78}%s [Lvl 1 %s]" % {entity:get("name"), entity:get("class").name})
+        self:image("icon/hp")
+        self:bar(entity:get("hp"), entity:get("stats").maxHp, "hp", "gray48", w, "{gray78}HP: ", "#", 20)
+        self:image("icon/mp")
+        self:bar(entity:get("mp"), entity:get("stats").maxMp, "mp", "gray48", w, "{gray78}MP: ", "#", 20)
+    end,
+    
+    mainStats = function(self, entity, w)
+        w = w or 40
+        
+        self:hpmp(entity, w)
+        self:image("icon/xp")
+        self:bar(entity:get("xp"), entity:get("maxXp"), "xp", "gray48", w, "{gray78}XP: ", "#", 20)
+        self:image("icon/gp")
+        self:text("{gray78}Gold: %d" % {entity:get("gp")}, 20)
     end,
 }

@@ -402,7 +402,7 @@ screen = {
         draw:text("-= Map - %s =-" % world:get("currentMap"))
         
         draw:space(20)
-        --draw:mainStats(player, 20)
+        draw:mainStats(player, 20)
         
         draw:space(10)
         if self:get("hunting") then draw:text("Hunting: {green}True")
@@ -580,26 +580,26 @@ screen = {
         
         -- Draw
         
-        draw:initScreen(38, "screen/camp")
-        draw:header("Camp")
+        draw:reset()
+        draw:text("-= Camp =-")
         
-        draw:newline()
+        draw:space(20)
         draw:mainStats(player)
         
-        draw:newline()
-        draw:options({"Inventory", "Equipment", "Arts", "Crafting", "Quests", "Stats", "Options"})
+        draw:space(20)
+        local option = input:options({"Inventory", "Equipment", "Arts", "Crafting", "Quests", "Stats", "Options"}, 10)
         
         
         -- Input
         
-        if self.key == "i" then self:down("inventory")
-        elseif self.key == "e" then self:down("equipment")
-        elseif self.key == "a" then self:down("arts")
-        elseif self.key == "c" then
+        if option == "i" then self:down("inventory")
+        elseif option == "e" then self:down("equipment")
+        elseif option == "a" then self:down("arts")
+        elseif option == "c" then
             self:down("crafting")
             self:set("station", "none")
-        elseif self.key == "o" then self:down("options")
-        elseif self.key == "escape" then self:up() end
+        elseif option == "o" then self:down("options")
+        elseif option == "escape" then self:up() end
     end,
     
     inventory = function(self)
