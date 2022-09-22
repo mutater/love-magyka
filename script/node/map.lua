@@ -42,22 +42,47 @@ Map = Node{
         end
     end,
     
-    draw = function(self, playerX, playerY, width, height, mapLeft, mapTop)
-        if #self.tiles[1] < width then width = #self.tiles[0] end
-        if #self.tiles < height then height = #self.tiles end
+    draw = function(self, playerX, playerY, screenWidth, screenHeight)
+        widthTiles = 39
+        heightTiles = 39
         
-        local left = playerX - math.floor(width / 2) - 1
-        local right = playerX + math.floor(width / 2)
-        local top = playerY - math.floor(height / 2) - 1
-        local bottom = playerY + math.floor(height / 2)
+        if #self.tiles[1] < widthTiles then widthTiles = #self.tiles[1] end
+        if #self.tiles < heightTiles then heightTiles = #self.tiles end
         
-        local mapY = mapTop
+        tileWidth = math.floor((screenHeight - 60) / widthTiles)
+        tileHeight = math.floor((screenHeight - 60) / heightTiles)
+        tileSize = math.max(tileWidth, tileHeight)
+        
+        local height = tileHeight * heightTiles
+        local width = tileWidth * widthTiles
+        
+        local mapTop = math.floor((screenHeight - height) / 2)
+        local mapLeft = screenWidth - width - mapTop
+        
+        local left = playerX - math.floor(widthTiles / 2)
+        local right = playerX + math.floor(widthTiles / 2)
+        local top = playerY - math.floor(heightTiles / 2)
+        local bottom = playerY + math.floor(heightTiles / 2)
+        
+        draw.autoSpace = false
         for y = top, bottom do
             for x = left, right do
-                draw:setColor(self:get("tile", x, y))
-                draw:rectangle("fill", mapLeft + draw:getFW() * (x - 1) * 2, mapTop + draw:getFH() * (y - 1), draw:getFW() * 2, draw:getFH())
+                if x == playerX and y == playerY then draw:setColor("black")
+                else draw:setColor(self:get("tile", x, y)) end
+                
+                local tileX = mapLeft + tileSize * (x - left)
+                local tileY = mapTop + tileSize * (y - top)
+                draw:rectangle("fill", tileX, tileY, tileSize, tileSize)
+                
+                if x == playerX and y == playerY then
+                    draw:setColor("white")
+                    draw:setLine(2)
+                    draw:rectangle("line", tileX + 1, tileY + 1, tileSize - 2, tileSize - 2)
+                    draw:setLine(1)
+                end
             end
         end
+        draw.autoSpace = true
     end,
 
     encounter = function(self, group)

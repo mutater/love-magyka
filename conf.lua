@@ -4,7 +4,10 @@ function love.conf(t)
     
     t.window.title = "Magyka"
     t.window.width = 1280
+    t.window.minwidth = 1280
     t.window.height = 720
+    t.window.minheight = 720
+    t.window.resizable = true
     t.window.vsync = 0
     
     t.modules.joystick = false

@@ -279,6 +279,10 @@ draw = {
         love.graphics.setColor(c)
     end,
     
+    setLine = function(self, s)
+        love.graphics.setLineWidth(s)
+    end,
+    
     rectangle = function(self, mode, x, y, w, h, rx, ry)
         local x = x or 0
         local y = y or 0

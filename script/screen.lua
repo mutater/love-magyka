@@ -386,19 +386,17 @@ screen = {
         -- Draw Variables
         
         local map = self:get("map")
-        local left = 20
-		local width = 200
-		local top = 20
-		local height = 200
-        
         local x = world:get("playerX")
         local y = world:get("playerY")
 
         
         -- Drawing info and map
         
-        draw:reset(10, 20)
-        map:draw(x, y, width, height, left, top)
+        draw:reset(0, 0)
+        map:draw(x, y, self.width, self.height)
+        draw:setColor("red")
+        draw.autoSpace = false
+        draw.autoSpace = true
         
         draw:reset(10, 20)
         draw:text("-= Map - %s =-" % world:get("currentMap"))
@@ -423,8 +421,8 @@ screen = {
         local moveX = 0
         local moveY = 0
         
-        if self.key == "c" then self:down("camp") end
-        if self.key == "h" then self:set("hunting", not self:get("hunting")) end
+        if option == "c" then self:down("camp") end
+        if option == "h" then self:set("hunting", not self:get("hunting")) end
         if input.keyboard.left.justPressed  then moveX = moveX - 1 end
         if input.keyboard.right.justPressed then moveX = moveX + 1 end
         if input.keyboard.up.justPressed    then moveY = moveY - 1 end

@@ -39,19 +39,23 @@ input = {
     end,
     
     keypressed = function(self, key)
-        self.keyboard.pressed = true
-        self.keyboard.released = false
-        if not self.keyboard[key].pressed then self.keyboard[key].justPressed = true end
-        self.keyboard[key].pressed = true
-        self.keyboard[key].released = false
+        if self.keyboard[key] then
+            self.keyboard.pressed = true
+            self.keyboard.released = false
+            if not self.keyboard[key].pressed then self.keyboard[key].justPressed = true end
+            self.keyboard[key].pressed = true
+            self.keyboard[key].released = false
+        end
     end,
     
     keyreleased = function(self, key)
-        self.keyboard.pressed = false
-        self.keyboard.released = true
-        if not self.keyboard[key].released then self.keyboard[key].justReleased = true end
-        self.keyboard[key].pressed = false
-        self.keyboard[key].released = true
+        if self.keyboard[key] then
+            self.keyboard.pressed = false
+            self.keyboard.released = true
+            if not self.keyboard[key].released then self.keyboard[key].justReleased = true end
+            self.keyboard[key].pressed = false
+            self.keyboard[key].released = true
+        end
     end,
     
     update = function(self)

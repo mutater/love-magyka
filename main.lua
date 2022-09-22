@@ -112,6 +112,12 @@ function love.keypressed(key)
     end
     if key == "lshift" then keyLShift = true end
     if key == "rshift" then keyRShift = true end
+    if key == "f11" then
+        local fullscreen, _ = love.window.getFullscreen()
+        love.window.setFullscreen(not fullscreen)
+        screen.width = love.graphics.getWidth()
+        screen.height = love.graphics.getHeight()
+    end
     
     
     -- Send key to game loop
@@ -164,6 +170,11 @@ end
 
 
 -- Update
+
+function love.resize(w, h)
+    screen.width = w
+    screen.height = h
+end
 
 function love.update(dt)
     
