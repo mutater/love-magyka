@@ -16,7 +16,7 @@ require "library/TSerial"
 
 --[[
  
- * Mouse asdf.
+ * Mouse input.
  * Transfer all info to the database.
  * Curing and blessing from the church.
  * Quests.
@@ -53,11 +53,6 @@ player = world:get("player")
 keyLShift = false
 keyRShift = false
 keyShift = false
-asdf = {}
-
-for k, v in ipairs{"up", "down", "left", "right"} do
-    asdf[v] = {key="up", pressed=false, justPressed=false, delay=0}
-end
 
 backspace = false
 
@@ -104,7 +99,6 @@ function love.keyreleased(key)
     if key == "lshift" then keyLShift = false end
     if key == "rshift" then keyRShift = false end
     
-    if asdf[key] then asdf[key].pressed = false end
     input:keyreleased(key)
 end
 
@@ -118,28 +112,6 @@ function love.keypressed(key)
     end
     if key == "lshift" then keyLShift = true end
     if key == "rshift" then keyRShift = true end
-    
-    
-    -- Give movement keys a delay if none of the others are pressed
-    
-    if asdf[key] then
-        asdf[key].pressed = true
-        
-        local delay = true
-        for k, v in pairs(asdf) do
-            if v.pressed and k ~= key then
-                delay = false
-                break
-            end
-        end
-        
-        if delay then
-            asdf[key].delay = -0.1
-            asdf[key].justPressed = true
-        else
-            asdf[key].delay = 0
-        end
-    end
     
     
     -- Send key to game loop
@@ -194,18 +166,6 @@ end
 -- Update
 
 function love.update(dt)
-    
-    -- asdf Key Repetition
-    
-    keyTimer = keyTimer + dt
-    if keyTimer >= keyTimerDefault then
-        keyTimer = keyTimer - keyTimerDefault
-        for k, v in pairs(asdf) do
-            v.delay = v.delay + dt
-            if v.delay > 0 and v.pressed then v.justPressed = true end
-        end
-    end
-    
     
     -- Shift
     

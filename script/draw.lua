@@ -280,11 +280,15 @@ draw = {
     end,
     
     rectangle = function(self, mode, x, y, w, h, rx, ry)
+        local x = x or 0
+        local y = y or 0
         love.graphics.rectangle(mode, self.xOffset + x, self.yOffset + y, w, h, rx, ry)
         if self.autoSpace then self:space(h) end
     end,
     
     text = function(self, text, x, y)
+        local x = x or 0
+        local y = y or 0
         local font = love.graphics.getFont()
         local text = text
         local oText = text

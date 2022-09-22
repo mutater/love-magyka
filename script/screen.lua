@@ -251,7 +251,7 @@ screen = {
         draw:setColor("white")
         
         draw:space(20)
-        local option = input:options(10, 0, {"New Game", "Continue", "Options", "Quit"})
+        local option = input:options({"New Game", "Continue", "Options", "Quit"}, 10, 0)
         
         if option == "n" then devCommand("s")
         elseif option == "c" then self:down("continue")
@@ -386,10 +386,10 @@ screen = {
         -- Draw Variables
         
         local map = self:get("map")
-        local left = draw.subLeft
-		local width = math.floor((self.width - 2 - left) / 2)
-		local top = 2
-		local height = self.height - 1 - top
+        local left = 20
+		local width = 200
+		local top = 20
+		local height = 200
         
         local x = world:get("playerX")
         local y = world:get("playerY")
@@ -397,27 +397,25 @@ screen = {
         
         -- Drawing info and map
         
-        draw:initScreen((screen.height - 1) * 2)
-        
+        draw:reset(10, 20)
         map:draw(x, y, width, height, left, top)
-        draw:rect("white", left + width + 1, top + math.floor(height / 2) + 1, 2, 1)
         
-        draw:top()
-        draw:header("Map - "..world:get("currentMap"))
+        draw:reset(10, 20)
+        draw:text("-= Map - %s =-" % world:get("currentMap"))
         
-        draw:newline()
-        draw:mainStats(player, 20)
+        draw:space(20)
+        --draw:mainStats(player, 20)
         
-        draw:newline()
+        draw:space(10)
         if self:get("hunting") then draw:text("Hunting: {green}True")
         else draw:text("Hunting: {red}False") end
         
-        draw:newline()
-        draw:options({"Camp", "Hunt"})
+        draw:space(10)
+        local option = input:options({"Camp", "Hunt"}, 10)
         
-        draw:newline()
-        draw:hint("- Use arrow keys to move.")
-        draw:hint("  Press a letter to select an option.")
+        draw:space(20)
+        draw:setColor("gray68")
+        draw:text("- Use arrow keys to move.")
         
         
         -- Input Variables
@@ -427,15 +425,10 @@ screen = {
         
         if self.key == "c" then self:down("camp") end
         if self.key == "h" then self:set("hunting", not self:get("hunting")) end
-        if input.left.justPressed  then moveX = moveX - 1 end
-        if input.right.justPressed then moveX = moveX + 1 end
-        if input.up.justPressed    then moveY = moveY - 1 end
-        if input.down.justPressed  then moveY = moveY + 1 end
-        
-        input.left.justPressed = false
-        input.right.justPressed = false
-        input.up.justPressed = false
-        input.down.justPressed = false
+        if input.keyboard.left.justPressed  then moveX = moveX - 1 end
+        if input.keyboard.right.justPressed then moveX = moveX + 1 end
+        if input.keyboard.up.justPressed    then moveY = moveY - 1 end
+        if input.keyboard.down.justPressed  then moveY = moveY + 1 end
         
         
         -- Collision Detection

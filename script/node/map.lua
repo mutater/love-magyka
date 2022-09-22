@@ -53,12 +53,10 @@ Map = Node{
         
         local mapY = mapTop
         for y = top, bottom do
-            local mapX = mapLeft
             for x = left, right do
-                draw:rect(self:get("tile", x, y), mapX, mapY, 2, 1)
-                mapX = mapX + 2
+                draw:setColor(self:get("tile", x, y))
+                draw:rectangle("fill", mapLeft + draw:getFW() * (x - 1) * 2, mapTop + draw:getFH() * (y - 1), draw:getFW() * 2, draw:getFH())
             end
-            mapY = mapY + 1
         end
     end,
 

@@ -115,7 +115,7 @@ input = {
     
     -- GUI Compound Functions
     
-    options = function(self, x, y, options)
+    options = function(self, options, x, y)
         local option = ""
         local length = #options
         local x = x + draw.xOffset
@@ -156,4 +156,9 @@ end
 local keys = "abcdefghijklmnopqrstuvwxyz1234567890"
 for c in keys:gmatch(".") do
     input.keyboard[c] = deepcopy(states)
+end
+
+local extraKeys = {"up", "left", "down", "right", "escape", "return"}
+for k, v in ipairs(extraKeys) do
+    input.keyboard[v] = deepcopy(states)
 end
