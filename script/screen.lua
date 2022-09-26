@@ -405,8 +405,11 @@ screen = {
         draw:mainStats(player, 20)
         
         draw:space(10)
-        if self:get("hunting") then draw:text("Hunting: {green}True")
-        else draw:text("Hunting: {red}False") end
+        if self:get("hunting") then
+            if input:textButton("Hunting: {green}True") == "released" then self:set("hunting", false) end
+        else
+            if input:textButton("Hunting: {red}False") == "released" then self:set("hunting", true) end
+        end
         
         draw:space(10)
         local option = input:options({"Camp", "Hunt"}, 10)
@@ -420,20 +423,23 @@ screen = {
         
         local moveX = 0
         local moveY = 0
+        local dt = love.timer.getDelta()
         
         if option == "c" then self:down("camp") end
         if option == "h" then self:set("hunting", not self:get("hunting")) end
-        if input.keyboard.left.justPressed  then moveX = moveX - 1 end
-        if input.keyboard.right.justPressed then moveX = moveX + 1 end
-        if input.keyboard.up.justPressed    then moveY = moveY - 1 end
-        if input.keyboard.down.justPressed  then moveY = moveY + 1 end
-        
+        if input.keyboard.left.pressed  then moveX = moveX - 5 * dt end
+        if input.keyboard.right.pressed then moveX = moveX + 5 * dt end
+        if input.keyboard.up.pressed    then moveY = moveY - 5 * dt end
+        if input.keyboard.down.pressed  then moveY = moveY + 5 * dt end
         
         -- Collision Detection
         
-        if not map:get("collision", x + moveX, y) then moveX = 0 end
-        if not map:get("collision", x, y + moveY) then moveY = 0 end
-        if not map:get("collision", x + moveX, y + moveY) then
+        local futureX = math.floor(x + moveX)
+        local futureY = math.floor(y + moveY)
+        
+        if not map:get("collision", futureX, y) then moveX = 0 end
+        if not map:get("collision", x, futureY) then moveY = 0 end
+        if not map:get("collision", futureX, futureY) then
             moveX = 0
             moveY = 0
         end
@@ -442,8 +448,7 @@ screen = {
         -- Moving, finding portals, and determing encounters
         
         if moveX ~= 0 or moveY ~= 0 then
-            world:add("playerX", moveX)
-            world:add("playerY", moveY)
+            world:movePlayer(moveX, moveY)
             
             local x = world:get("playerX")
             local y = world:get("playerY")

@@ -97,6 +97,8 @@ input = {
     
     textButton = function(self, text, x, y, inactiveColor, hoveredColor, pressedColor)
         local font = love.graphics.getFont()
+        local x = x or 0
+        local y = y or 0
         local w = font:getWidth(text)
         local h = font:getHeight()
         local inactiveColor = inactiveColor or color.white
