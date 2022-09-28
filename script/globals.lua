@@ -12,6 +12,18 @@ equipment = {
     "acc",
 }
 
+-- Item Types
+
+itemTypes = {
+    "weapon",
+    "apparel",
+    "consumable",
+    "potion",
+    "food",
+    "material",
+    "misc",
+}
+
 
 -- Displayed Stats
 

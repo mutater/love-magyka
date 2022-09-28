@@ -9,6 +9,11 @@ input = {
         y = 0,
     },
     
+    mouseWheel = {
+        x = 0,
+        y = 0,
+    },
+    
     keyboard = {
         pressed = false,
         released = true,
@@ -38,7 +43,15 @@ input = {
         self.mouse.y = y
     end,
     
+    wheelmoved = function(self, x, y)
+        self.mouseWheel.x = x
+        self.mouseWheel.y = y
+    end,
+    
     keypressed = function(self, key)
+        local key = key
+        if key == "return" then key = "enter" end
+        
         if self.keyboard[key] then
             self.keyboard.pressed = true
             self.keyboard.released = false
@@ -49,6 +62,9 @@ input = {
     end,
     
     keyreleased = function(self, key)
+        local key = key
+        if key == "return" then key = "enter" end
+        
         if self.keyboard[key] then
             self.keyboard.pressed = false
             self.keyboard.released = true
@@ -70,6 +86,9 @@ input = {
                 v.justReleased = false
             end
         end
+        
+        self.mouseWheel.x = 0
+        self.mouseWheel.y = 0
     end,
     
     
@@ -121,27 +140,58 @@ input = {
     
     -- GUI Compound Functions
     
-    options = function(self, options, x, y)
+    options = function(self, options, x, y, listMode, gap)
         local option = ""
         local length = #options
-        local x = x + draw.xOffset
+        local x = x or 0
+        
+        local lettered = true
+        local numbered = false
+        local noIndex = false
+        if listMode == "lettered" then
+            lettered = true
+        elseif listMode == "numbered" then
+            numbered = true
+            lettered = false
+        elseif listMode ~= "" and listMode ~= nil then
+            noIndex = true
+            lettered = false
+        end
+        
+        local gap = gap
+        if gap == nil then gap = true end
         
         draw.autoSpace = false
         draw:setColor("gray28")
-        draw:rectangle("fill", x, 0, 3 * 10, (length * 2 - 1) * 20)
+        local rectangleLength = length * 2 - 1
+        if not gap then rectangleLength = length - 1 end
+        draw:rectangle("fill", x, 0, 3 * 10, rectangleLength * 20)
         draw.autoSpace = true
         
         for k, v in ipairs(options) do
-            local optionCharacter = v:sub(1, 1):lower()
-            if self:textButton("[%s] %s" % {v:sub(1, 1), v}, x, 0) == "released" then
-                option = optionCharacter
+            local optionCharacter = ""
+            if lettered then
+                optionCharacter = v:sub(1, 1):lower()
+                if self:textButton("[%s] %s" % {v:sub(1, 1), v}, x, 0) == "released" then
+                    option = optionCharacter
+                end
+            elseif numbered then
+                optionCharacter = tostring(k):sub(-1)
+                if self:textButton("(%s) %s" % {optionCharacter, v}, x, 0) == "released" then
+                    option = optionCharacter
+                end
+            else
+                if self:textButton(v, x, 0) == "released" then
+                    option = v
+                end
             end
-            if self.keyboard[optionCharacter].justPressed then
+            
+            if not noIndex and self.keyboard[optionCharacter].justPressed then
                 option = optionCharacter
             end
             
             draw:setColor("white")
-            if k < length then draw:text("|", x + 10, 0) end
+            if k < length and gap then draw:text("|", x + 10, 0) end
         end
         
         return option
@@ -164,7 +214,7 @@ for c in keys:gmatch(".") do
     input.keyboard[c] = deepcopy(states)
 end
 
-local extraKeys = {"up", "left", "down", "right", "escape", "return"}
+local extraKeys = {"up", "left", "down", "right", "escape", "enter"}
 for k, v in ipairs(extraKeys) do
     input.keyboard[v] = deepcopy(states)
 end

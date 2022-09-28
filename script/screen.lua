@@ -35,6 +35,7 @@ screen = {
             targetType = "",
 			target = "",
         },
+        inventory = {stage="type input", itemType="", offset=0, items=nil},
 		inventoryBattle = {item=nil},
         artsBattle = {art=nil},
         victory = {stage="input", lootEntity=newEntity{}},
@@ -611,13 +612,60 @@ screen = {
         
         -- Draw
         
-        draw:initScreen(38, "screen/inventory")
-        draw:header("Inventory")
+        draw:reset(0, 0)
+        --draw:text("-= Inventory =-")
         
         
         -- List player inventory
         
-		self:pages(
+        if self:get("stage") == "type input" then
+            draw:reset(20, 0)
+            draw:setColor("gray28")
+            draw:rectangle("fill", 0, 0, 240, self.height)
+            
+            draw:reset(20, 10)
+            local options = {"all"}
+            appendTable(options, itemTypes)
+            local option = input:options(options, 10, 0, "no", false)
+            
+            if option ~= "" then
+                self:set("itemType", option)
+                self:set("stage", "item input")
+            elseif input.keyboard.escape.justPressed then self:up() end
+        
+        
+        elseif self:get("stage") == "item input" then
+            draw:reset(20, 0)
+            draw:setColor("black")
+            draw:rectangle("fill", 0, 0, 240, self.height)
+            
+            draw:reset(20, 10)
+            draw:setColor("gray48")
+            for k, v in ipairs(itemTypes) do draw:text(v, 10) end
+            
+            draw:reset(280, 0)
+            draw:setColor("gray28")
+            draw:rectangle("fill", 0, 0, 240, self.height)
+            
+            local items = {}
+            for k, v in ipairs(player:get("inventory")) do
+                if self:get("itemType") == "all" or v[1].type == self:get("itemType") then
+                    print("hi")
+                    table.insert(items, v)
+                end
+            end
+            
+            draw:reset(280, 10)
+            print(dumpTable(items))
+            for k, v in ipairs(items) do
+                input:textButton(v[1]:display())
+            end
+            local option = ""
+            if option ~= "" then print(option)
+            elseif input.keyboard.escape.justPressed then self:set("stage", "type input") end
+        end
+        
+		--[[self:pages(
             player:get("inventory"),
             function(item)
                 if item[1]:get("stackable") then return item[1]:display(item[2])
@@ -628,7 +676,7 @@ screen = {
                 self:set("item", item[1], "inspectItem")
             end,
             function() self:up() end
-        )
+        )]]
     end,
     
     inventorySell = function(self)

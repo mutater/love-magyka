@@ -88,7 +88,6 @@ function love.load()
     love.filesystem.setIdentity("magyka/saves")
     math.randomseed(os.time())
     
-    
     -- Extra
 end
 
@@ -118,6 +117,8 @@ function love.keypressed(key)
         screen.width = love.graphics.getWidth()
         screen.height = love.graphics.getHeight()
     end
+    
+    if key == "f1" then devCommand("give Sword") end
     
     
     -- Send key to game loop
