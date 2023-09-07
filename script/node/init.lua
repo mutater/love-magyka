@@ -1,6 +1,4 @@
 require "script/node/alignment"
-require "script/node/art"
-require "script/node/arts"
 require "script/node/class"
 require "script/node/effect"
 require "script/node/effects"

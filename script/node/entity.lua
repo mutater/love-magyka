@@ -16,7 +16,6 @@ Entity = Node{
 		"Inventory",
 		"Equipment",
 		"PassiveHolder",
-		"Arts",
 		"Recipes",
 		"Loots",
 		"Effects",
@@ -29,11 +28,9 @@ Entity = Node{
 		
 		self.stats.linkedEquipment = self.equipment
 		self.stats.linkedPassiveHolder = self.passiveHolder
-		self.stats.linkedArts = self.arts
 		
 		self.alignment.linkedEquipment = self.equipment
 		self.alignment.linkedPassiveHolder = self.passiveHolder
-		self.alignment.linkedArts = self.arts
 		
 		self.level.linkedHealth = self.health
 		self.level.linkedMana = self.mana
@@ -46,7 +43,6 @@ Entity = Node{
     
     update = function(self)
 		self.equipment:update()
-		self.arts:update()
 		self.alignment:update()
 		self.stats:update()
 		self.health:update()

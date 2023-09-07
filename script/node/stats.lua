@@ -8,7 +8,6 @@ Stats = Node{
 	base = {},
     linkedEquipment = nil,
     linkedPassiveHolder = nil,
-    linkedArts = nil,
     
 	init = function(self)
 		local defaultStats = {
@@ -57,7 +56,7 @@ Stats = Node{
 		
 		-- Get stats from args
 		
-		for _, c in ipairs({linkedEquipment, linkedPassiveHolder, linkedArts}) do
+		for _, c in ipairs({linkedEquipment, linkedPassiveHolder}) do
 			for k, v in ipairs(c.list) do
 				if type(v) == "table" and v.stats ~= nil then
 					for _, stat in pairs(v:get("stats")) do table.insert(buffer, stat) end

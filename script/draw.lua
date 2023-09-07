@@ -255,23 +255,6 @@ draw = {
         end
     end,
     
-    art = function(self, art)
-        self:text(art:display())
-        self:space()
-        for k, v in ipairs(art:get("description")) do self:text(v) end
-        
-        local effect = art:get("effect")
-        if effect then
-            for k, v in ipairs(effect) do self:effect(v) end
-        end
-        
-        local stats = art:get("stats")
-        if stats then
-            self:space()
-            for k, v in pairs(stats) do self:stat(k, v) end
-        end
-    end,
-    
     effect = function(self, effect)
         local text = ""
         

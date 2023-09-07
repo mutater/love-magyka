@@ -94,50 +94,6 @@ function newAlignment(arg)
 	return alignment
 end
 
-function newArt(arg)
-	local art = createNode(art, "Art")
-	
-	art:update()
-	
-	return art
-	
-	-- -- Automagic type and target bools
-	
-	-- if art.type == "passive" then
-		-- art.battle = false
-		-- art.targetSelf = false
-		-- art.targetOther = false
-	-- elseif art.type == "stance" then
-		-- art.battle = true
-		-- art.targetSelf = true
-		-- art.targetOther = false
-	-- elseif art.type == "restoration" then
-		-- art.targetSelf = true
-		-- art.targetOther = false
-	-- elseif art.type == "destruction" then
-		-- art.targetSelf = false
-		-- art.targetOther = true
-	-- elseif art.type == "degrade" then
-		-- art.targetSelf = false
-		-- art.targetOther = true
-	-- elseif art.type == "alter" then
-		-- art.targetSelf = false
-		-- art.targetOther = false
-	-- end
-end
-
-function newArts(arg)
-    local arts = createNode(arg, "Arts")
-	
-	for k, v in ipairs(arts.list) do
-		arts.list[k] = newArt(v)
-	end
-	
-	arts:update()
-	
-	return arts
-end
-
 function newClass(arg)
 	local class = createNode(arg, "Class")
 	
@@ -242,10 +198,6 @@ function newLoot(arg)
 	
 	for k, v in ipairs(loot.items) do
 		loot.items[k] = newItem(v)
-	end
-	
-	for k, v in ipairs(loot.arts) do
-		loot.arts[k] = newArt(v)
 	end
 	
 	return loot

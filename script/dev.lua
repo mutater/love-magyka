@@ -26,7 +26,6 @@ devCommand = function(command)
         player.info.name = "Developer"
         player:setClass(newClass("Warrior"))
         devCommand("give all")
-        devCommand("art all")
         devCommand("pset gp, 999999999")
         saving = false
         screen:down("camp")
@@ -77,20 +76,6 @@ devCommand = function(command)
                 local item = newItem(args[1])
                 player:addItem(item, quantity)
                 return {"Gave item '%s'" % item:display()}
-            end
-        end
-    
-    
-    elseif word == "art" then
-        if args[1] then
-            if args[1] == "all" then
-                local names = getNamesFromDatabase("Art")
-                for k, v in ipairs(names) do player:addArt(newArt(v)) end
-                return {"Gave all arts in database"}
-            else
-                local art = newArt(args[1])
-                player:addArt(art)
-                return {"Gave art '%s'" % art:display()}
             end
         end
     

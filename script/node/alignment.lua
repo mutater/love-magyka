@@ -8,15 +8,14 @@ Alignment = Node{
 	bc = 0,
     linkedEquipment = nil,
     linkedPassiveHolder = nil,
-    linkedArts = nil,
 	
 	update = function(self)
-		if linkedEquipment or linkedPassiveHolder or linkedArts then
+		if linkedEquipment or linkedPassiveHolder then
 			local eX = 0
 			local eY = 0
 			local bc = 0
 			
-			for _, c in ipairs({linkedEquipment, linkedPassiveHolder, linkedArts}) do
+			for _, c in ipairs({linkedEquipment, linkedPassiveHolder}) do
 				for k, v in ipairs(c.list) do
 					if type(v) == "table" and v.alignment ~= nil then
 						local e = alignment:getElement()

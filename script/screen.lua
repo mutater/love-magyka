@@ -29,8 +29,6 @@ screen = {
             stage = "prebattle",
             enemy = {},
             text = {},
-            art = nil,
-            artChosen = false,
             item = nil,
             itemChosen = false,
             targetType = "",
@@ -39,8 +37,6 @@ screen = {
             escape = false,
         },
         inventory = {stage="type input", itemType="", quantity=1, items=nil, inventoryPurpose="inventory", text={}, battle=false, index=0, typeIndex=0},
-        arts = {stage="type input", artType="", arts=nil, text={}, battle=false, index=0, typeIndex=0},
-        artsBattle = {art=nil},
         victory = {stage="input", lootEntity=newEntity{}},
         defeat = {stage="curse"},
         craft = {station="none"},
@@ -420,7 +416,7 @@ screen = {
         local option1 = input:options({"Encounter", "Town", "Options"})
         
         draw:space()
-        local option2 = input:options({"Inventory", "Arts", "Crafting", "Quests", "Stats"})
+        local option2 = input:options({"Inventory", "Crafting", "Quests", "Stats"})
         
         local option = concat(option1, option2)
         
@@ -435,8 +431,6 @@ screen = {
             draw:text("- WIP")
             draw:space()
             draw:text("- See what you have and what you have equipped here.")
-            draw:space()
-            draw:text("- See what melee skills and magyks you have here.")
             draw:space()
             draw:text("- Craft various items from parts purchased, made, or found.")
             draw:space()
@@ -493,7 +487,6 @@ screen = {
         end
         elseif option == "t" then self:down("town")
         elseif option == "i" then self:down("inventory")
-        elseif option == "a" then self:down("arts")
         elseif option == "c" then
             self:down("inventory")
             self:set("inventoryPurpose", "craft")
@@ -1031,129 +1024,6 @@ screen = {
         end
     end,
     
-    arts = function(self)
-        local col1 = 2
-        local col1Width = math.ceil(draw.screenWidth * 0.15)
-        local col2 = col1 + col1Width + 2
-        local col2Width = math.ceil(draw.screenWidth * 0.3)
-        local col3 = col2 + col2Width + 2
-        local col3Width = draw.screenWidth - col3 - 2
-        
-        -- Type Select
-        
-        do
-            draw:reset(col1, 0)
-            
-            local types = {"all"}
-            local tempArtTypes = deepcopy(artTypes)
-            if self:get("battle") then table.remove(tempArtTypes, 1) end
-            appendTable(types, tempArtTypes)
-            local capitalTypes = title(deepcopy(types))
-            
-            self:drawPage(title(self:get("artPurpose")), col1Width, self:get("stage") == "type input")
-            draw:space()
-            local index = input:optionsIndex(capitalTypes, self:get("stage") == "type input")
-            
-            if index == "escape" then
-                self:up()
-                return
-            elseif index then
-                if types[index] ~= self:get("artType") then self:set("index", 0) end
-                self:set("artType", types[index])
-                self:set("stage", "art input")
-                input:update()
-            end
-        end
-    
-    
-        -- Art Select
-        
-        if self:get("stage") ~= "type input" then
-            draw:reset(col2, 0)
-            
-            local arts = {}
-            if self:get("artType") == "all" then
-                arts = player:get("arts")
-            else
-                for k, v in ipairs(player:get("arts")) do
-                    if v:get("type") == self:get("artType") then table.insert(arts, v) end
-                end
-            end
-            
-            local index = self:page(
-                "Arts - "..title(self:get("artType")), col2Width, arts, "index",
-                self:get("stage") == "art input",
-                function(k, v) return v:display() end
-            )
-            
-            if index == "escape" then
-                self:set("stage", "type input")
-            elseif index then
-                self:set("stage", "inspect")
-                self:set("inspect stage", "input")
-                self:set("art", arts[index])
-                input:update()
-            end
-        end
-        
-        
-        -- Art Inspect Menus
-        
-        if self:get("stage") == "inspect" then
-            draw:reset(col3, 0)
-            draw:setColor("gray3")
-            draw:rectangle("fill", 0, 0, col3Width, draw.screenHeight)
-            
-            draw:reset(col3, 1)
-            draw:shift()
-            local art = self:get("art")
-            
-            draw:art(art)
-            
-            
-            -- Input
-            
-            if self:get("inspect stage") == "input" then
-                draw:space()
-                local option
-                if (art.targetSelf and not self:get("battle")) or self:get("battle") then option = input:options({"Use"})
-                else option = input:escape() end
-                
-                if option == "u" and not self:get("battle") then
-                    for k, v in ipairs(art:get("effect")) do
-                        appendTable(self:get("text"), v:use(art, player, player))
-                    end
-                    
-                    self:set("inspect stage", "use")
-                elseif option == "u" and self:get("battle") then
-                    self:up()
-                    self:set("artChosen", true)
-                    self:set("art", art)
-                    self:set("stage", "target")
-                    
-                    if art:get("targetSelf") and art:get("targetOther") then self:set("targetType", "all")
-                    elseif art:get("targetSelf") then self:set("targetType", "self")
-                    elseif art:get("targetOther") then self:set("targetType", "enemy") end
-                elseif option == "escape" then self:set("stage", "art input") end
-            
-            
-            -- Use Output
-            
-            elseif self:get("inspect stage") == "use" then
-                draw:space()
-                for k, v in ipairs(self:get("text")) do draw:text(v) end
-                
-                draw:space()
-                draw:hint("- Press [ENTER] to continue.")
-                
-                if self:cancel() or self:enter() then
-                    self:set("stage", "art input")
-                    self:set("artIndex", 0)
-                end
-            end
-        end
-    end,
-    
     battle = function(self)
         
         -- Draw enemy info
@@ -1254,15 +1124,13 @@ screen = {
                 self:set("text", {})
                 
                 draw:shift()
-                local option = input:options({"Melee", "Art", "Guard", "Item", "Concede"})
+                local option = input:options({"Melee", "Guard", "Item", "Concede"})
                 
                 draw:space()
                 if input:textButton("- Mouse over or hold [F1] for help.", 0, 0, color.gray4, color.gray4, color.gray4) == "hovered" or input.keyboard.f1.pressed then
                     draw:reset(15, 7)
                     draw:setColor("gray4")
                     draw:text("- Attack the enemy with your weapon.")
-                    draw:space()
-                    draw:text("- Select & use an Art.")
                     draw:space()
                     draw:text("- Concede your attack for defending against an enemy.")
                     draw:space()
@@ -1274,9 +1142,6 @@ screen = {
                 if option == "m" then
                     self:set("targetType", "enemy")
                     self:set("stage", "target")
-                elseif option == "a" then
-                    self:down("arts")
-                    self:set("battle", true)
                 elseif option == "g" then
                     player:set("guard", "block")
                     self:set("text", {player:display().." raises their guard."})
@@ -1356,11 +1221,6 @@ screen = {
                         if not self:get("item"):get("infinite") then player:removeItem(self:get("item")) end
                         
                         self:set("itemChosen", false)
-                    elseif self:get("artChosen") then
-                        for k, v in ipairs(self:get("art"):get("effect")) do
-                            appendTable(self:get("text"), v:use(self:get("art"), player, target))
-                        end
-                        self:set("artChosen", false)
                     else
                         appendTable(self:get("text"), player:attack(target))
                     end

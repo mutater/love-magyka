@@ -6,7 +6,6 @@ Loot = Node{
     xp = nil,
     gp = nil,
     items = {},
-	arts = {},
     mode = "normal",
     
     activate = function(self)
