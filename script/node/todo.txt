@@ -1,0 +1,1 @@
+currently working on getting item.lua to activate its effects and passives
