@@ -176,6 +176,8 @@ function newInventory(arg)
 	end
 	
 	inventory:update()
+	
+	return inventory
 end
 
 function newItem(arg)

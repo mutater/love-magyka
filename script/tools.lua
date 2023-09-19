@@ -28,21 +28,27 @@ function export(class) -- Exports table and metatable data to a table
     return t
 end
 
-function dumpTable(o) -- Dumps a table to a string
+function dumpTable(o, tabs) -- Dumps a table to a string
+	local tabs = tabs or 0
+	local outerTab = string.rep(".   ", tabs)
+	local innerTab = string.rep(".   ", tabs + 1)
+	
 	if type(o) == 'table' then
-		local s = '{ '
+		local s = '{\n'
 		for k, v in pairs(o) do
 			if type(k) ~= 'number' then k = '"'..k..'"' end
-			s = s..'['..k..'] = '..dumpTable(v).. ','
+			s = s..innerTab..'['..k..'] = '..dumpTable(v, tabs + 1).. ',\n'
 		end
-		return s .. '} '
+		return s .. outerTab..'}'
 	else
 		return tostring(o)
 	end
 end
 
 function dumpClass(c) -- Dumps a class to a string
-	if hasKey(c) then return dumpTable(c:export())
+	if type(c) ~= "table" then return(type(c)) end
+	
+	if c["export"] then return dumpTable(c:export())
 	else return dumpTable(c) end
 end
 

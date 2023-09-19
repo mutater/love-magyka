@@ -381,24 +381,29 @@ screen = {
         -- Display and confirm class choice
         
         elseif self:get("stage") == "class output" then
-            draw:text("-= New Game - Class - "..self:get("class").name.." =-")
+			local class = self:get("class")
+			local info = class.info
+			
+            draw:text("-= New Game - Class - "..info.name.." =-")
             
             draw:space()
-            for k, v in ipairs(self:get("class").description) do draw:text(v) end
+            for k, v in ipairs(info.description) do draw:text(v) end
             
             draw:space()
-            draw:text("Are you sure you wish to pick %s?" % self:get("class").name)
+            draw:text("Are you sure you wish to pick %s?" % info.name)
             
             draw:space()
             local option = input:options({"Yes", "No"})
             
             if option == "y" then
-                player:setClass(self:get("class"))
-                player:set("name", self:get("name"))
+                player:setClass(class)
+				player.info.name = self:get("name")
                 self:down("camp")
                 saving = true
                 autosave = true
-            elseif option == "n" or option == "escape" then self:set("stage", "class input") end
+            elseif option == "n" or option == "escape" then
+				self:set("stage", "class input")
+			end
         end
     end,
     
@@ -558,7 +563,7 @@ screen = {
             
             local types = {"all"}
             if not has({"store", "select", "sell", "craft"}, "inventoryPurpose") then table.insert(types, "character") end
-            appendTable(types, itemTypes)
+            appendTable(types, Globals.itemTypes)
             local capitalTypes = title(deepcopy(types))
             
             self:drawPage(title(self:get("inventoryPurpose")), col1Width, self:get("stage") == "type input")
@@ -626,9 +631,9 @@ screen = {
                 infoFunction = function (k, v) return v:info() end
             else
                 if self:get("itemType") == "all" then
-                    items = player:get("inventory")
+                    items = player.inventory.list
                 else
-                    for k, v in ipairs(player:get("inventory")) do
+                    for k, v in ipairs(player.inventory.list) do
                         if v[1]:get("type") == self:get("itemType") then table.insert(items, v) end
                     end
                 end

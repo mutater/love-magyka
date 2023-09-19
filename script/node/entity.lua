@@ -21,6 +21,7 @@ Entity = Node{
 		"Effects",
 		"Passives",
 	},
+	gold = 0,
     
     init = function(self)
 		self.health.linkedStats = self.stats

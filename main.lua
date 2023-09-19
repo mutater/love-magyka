@@ -9,6 +9,7 @@ require "script/generator"
 require "script/globals"
 require "script/screen"
 require "script/tools"
+require "script/node"
 
 require "library/TSerial"
 

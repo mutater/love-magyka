@@ -213,7 +213,7 @@ draw = {
         self:icon("xp")
         self:bar(entity.level.exp, entity.level.maxExp, "xp", "gray4", w, "{gray7}XP: ", "#", 2)
         self:icon("gp")
-        self:text("{gray7}Gold: %d" % {entity:get("gp")}, 2)
+        self:text("{gray7}Gold: %d" % {entity.gold}, 2)
     end,
     
     stat = function(self, name, stat)
